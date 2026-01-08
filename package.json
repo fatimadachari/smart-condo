@@ -9,10 +9,13 @@
     "dev": "turbo run dev",
     "lint": "turbo run lint"
   },
+  "engines": {
+    "node": "20.x"
+  },
   "keywords": [],
   "author": "",
   "license": "ISC",
-  "packageManager": "pnpm@10.7.0",
+  "packageManager": "pnpm@9.15.0",
   "devDependencies": {
     "turbo": "^2.7.3"
   }
