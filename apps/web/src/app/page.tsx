@@ -1,6 +1,5 @@
 export default async function Home() {
-  // ATENÇÃO: Troque pela URL REAL da sua API na Railway (sem a barra / no final)
-  const API_URL = 'https://smart-condo-production.up.railway.app'; 
+const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3000';
   
   let message = 'Carregando...';
 
