@@ -1,0 +1,3 @@
+packages:
+  - 'apps/*'      # Onde ficam o Backend (Nest) e Frontend (Next)
+  - 'packages/*'  # Onde ficam códigos compartilhados (Tipos, DTOs, ESLint config)
