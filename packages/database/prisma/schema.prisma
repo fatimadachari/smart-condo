@@ -1,0 +1,50 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+// O Condomínio em si
+model Condominio {
+  id        String   @id @default(uuid())
+  nome      String
+  endereco  String?
+  criadoEm  DateTime @default(now())
+  
+  users     User[]
+  unidades  Unidade[]
+}
+
+// Usuários (Moradores, Síndicos, Porteiros)
+model User {
+  id           String   @id @default(uuid())
+  email        String   @unique
+  senha        String
+  nome         String
+  tipo         String   // "SINDICO", "MORADOR", "PORTEIRO"
+  
+  condominioId String
+  condominio   Condominio @relation(fields: [condominioId], references: [id])
+  
+  unidadeId    String?
+  unidade      Unidade?   @relation(fields: [unidadeId], references: [id])
+
+  criadoEm     DateTime @default(now())
+}
+
+// Apartamentos ou Casas
+model Unidade {
+  id           String   @id @default(uuid())
+  bloco        String?
+  numero       String
+  
+  condominioId String
+  condominio   Condominio @relation(fields: [condominioId], references: [id])
+  
+  moradores    User[]
+
+  @@unique([condominioId, bloco, numero])
+}
