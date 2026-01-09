@@ -1,9 +1,11 @@
-import { Controller, Get, Post, Body, Patch, Param, Delete, HttpCode, HttpStatus } from '@nestjs/common';
+import { Controller, Get, Post, Body, Patch, Param, Delete, HttpCode, HttpStatus, UseGuards } from '@nestjs/common'; // <--- Importe UseGuards
+import { AuthGuard } from '@nestjs/passport';
 import { CondominiosService } from './condominios.service';
 import { CreateCondominioDto } from './dto/create-condominio.dto';
 import { UpdateCondominioDto } from './dto/update-condominio.dto';
 
 @Controller('condominios')
+@UseGuards(AuthGuard('jwt')) // <--- ISSO TRANCA TODAS AS ROTAS DESTE CONTROLADOR
 export class CondominiosController {
     constructor(private readonly condominiosService: CondominiosService) { }
 

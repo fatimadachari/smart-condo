@@ -3,11 +3,15 @@ import { ConfigModule } from '@nestjs/config';
 import { AppController } from './app.controller';
 import { AppService } from './app.service';
 import { CondominiosModule } from './condominios/condominios.module'; 
+import { UsersModule } from './users/users.module';
+import { AuthModule } from './auth/auth.module';
 
 @Module({
   imports: [
     ConfigModule.forRoot({ isGlobal: true }),
-    CondominiosModule, // <--- Adicione aqui
+    CondominiosModule,
+    UsersModule,
+    AuthModule, // <--- Adicione aqui
   ],
   controllers: [AppController],
   providers: [AppService],
