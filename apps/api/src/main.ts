@@ -1,3 +1,4 @@
+// Forçando deploy do Railway após correção do Prisma
 import * as dotenv from 'dotenv';
 dotenv.config();
 

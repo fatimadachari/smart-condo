@@ -1,0 +1,14 @@
+{
+    "$schema": "https://railway.app/railway.schema.json",
+    "build": {
+        "watchPatterns": [
+            "apps/api/**",
+            "packages/database/**",
+            "pnpm-lock.yaml"
+        ]
+    },
+    "deploy": {
+        "restartPolicyType": "ON_FAILURE",
+        "restartPolicyMaxRetries": 10
+    }
+}
