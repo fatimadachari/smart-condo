@@ -5,13 +5,15 @@ import { AppService } from './app.service';
 import { CondominiosModule } from './condominios/condominios.module'; 
 import { UsersModule } from './users/users.module';
 import { AuthModule } from './auth/auth.module';
+import { UnidadesModule } from './unidades/unidades.module';
 
 @Module({
   imports: [
     ConfigModule.forRoot({ isGlobal: true }),
     CondominiosModule,
     UsersModule,
-    AuthModule, // <--- Adicione aqui
+    AuthModule, 
+    UnidadesModule
   ],
   controllers: [AppController],
   providers: [AppService],
