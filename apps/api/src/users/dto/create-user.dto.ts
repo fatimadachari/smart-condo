@@ -1,33 +1,34 @@
-import { IsEmail, IsNotEmpty, IsString, MinLength, IsUUID, IsEnum, IsOptional } from 'class-validator';
+import { IsEmail, IsEnum, IsNotEmpty, IsOptional, IsString, IsUUID, MinLength } from 'class-validator';
 
-// Vamos garantir que o tipo seja um desses três
-export enum UserType {
+// Ajuste os valores conforme o seu schema.prisma (Enum Role)
+export enum UserRole {
+  ADMIN = 'ADMIN',
   SINDICO = 'SINDICO',
-  MORADOR = 'MORADOR',
   PORTEIRO = 'PORTEIRO',
+  MORADOR = 'MORADOR',
 }
 
 export class CreateUserDto {
-  @IsString({ message: 'O nome deve ser um texto.' })
-  @IsNotEmpty({ message: 'O nome é obrigatório.' })
-  nome: string;
+  @IsString()
+  @IsNotEmpty()
+  name: string;
 
-  @IsEmail({}, { message: 'Informe um e-mail válido.' })
-  @IsNotEmpty({ message: 'O e-mail é obrigatório.' })
+  @IsEmail({}, { message: 'E-mail inválido' })
+  @IsNotEmpty()
   email: string;
 
   @IsString()
-  @MinLength(6, { message: 'A senha deve ter no mínimo 6 caracteres.' })
-  senha: string;
+  @MinLength(6, { message: 'A senha deve ter no mínimo 6 caracteres' })
+  password: string;
 
-  @IsEnum(UserType, { message: 'O tipo deve ser SINDICO, MORADOR ou PORTEIRO.' })
-  tipo: UserType;
+  @IsEnum(UserRole, { message: 'Tipo de usuário inválido' })
+  role: UserRole;
 
-  @IsUUID('4', { message: 'ID do condomínio inválido.' })
-  @IsNotEmpty()
-  condominioId: string;
+  @IsUUID()
+  @IsOptional()
+  condominioId?: string; // Síndicos e Porteiros precisam disso
 
-  @IsUUID('4', { message: 'ID da unidade inválido.' })
-  @IsOptional() // Unidade é opcional (ex: Porteiro ou Síndico externo podem não ter apê)
-  unidadeId?: string;
+  @IsUUID()
+  @IsOptional()
+  unidadeId?: string; // Moradores precisam disso
 }

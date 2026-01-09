@@ -1,14 +1,22 @@
-import { Injectable, ConflictException, InternalServerErrorException, NotFoundException } from '@nestjs/common';
+import { Injectable, ConflictException, NotFoundException, InternalServerErrorException } from '@nestjs/common';
+import * as bcrypt from 'bcrypt';
+import { prisma } from '@smart-condo/database';
 import { CreateUserDto } from './dto/create-user.dto';
 import { UpdateUserDto } from './dto/update-user.dto';
-import { prisma } from '@smart-condo/database';
-import * as bcrypt from 'bcrypt';
 
 @Injectable()
 export class UsersService {
   
+  private mapToFrontend(user: any) {
+    const { senha, ...rest } = user;
+    return {
+      ...rest,
+      name: user.nome,
+      role: user.tipo,
+    };
+  }
+
   async create(data: CreateUserDto) {
-    // 1. Verificar se o e-mail já existe
     const userExists = await prisma.user.findUnique({
       where: { email: data.email },
     });
@@ -17,31 +25,31 @@ export class UsersService {
       throw new ConflictException('Este e-mail já está cadastrado.');
     }
 
-    // 2. Verificar se o Condomínio existe (Regra de consistência)
-    const condominioExists = await prisma.condominio.findUnique({
-      where: { id: data.condominioId }
-    });
+    const hashedPassword = await bcrypt.hash(data.password, 10);
 
-    if (!condominioExists) {
-      throw new NotFoundException('O condomínio informado não existe.');
+    // SOLUÇÃO: Montamos o objeto manualmente para evitar o erro de tipo
+    // Usamos 'any' aqui pontualmente ou construímos condicionalmente
+    const payload: any = {
+        nome: data.name,
+        email: data.email,
+        senha: hashedPassword,
+        tipo: data.role,
+    };
+
+    // Só adicionamos o ID se ele realmente existir (evita passar undefined)
+    if (data.condominioId) {
+        payload.condominioId = data.condominioId;
     }
+    
+    // Se tiver unidade no futuro:
+    // if (data.unidadeId) payload.unidadeId = data.unidadeId;
 
-    // 3. Criptografar a senha (Hash)
-    const salt = await bcrypt.genSalt(10); // O "tempero" da criptografia
-    const hashedPassword = await bcrypt.hash(data.senha, salt);
-
-    // 4. Salvar no banco
     try {
       const user = await prisma.user.create({
-        data: {
-          ...data,
-          senha: hashedPassword, // Salvamos o hash, NUNCA a senha original
-        },
+        data: payload, // Agora o TS aceita
       });
 
-      // Remover a senha do objeto de retorno (Segurança)
-      const { senha, ...result } = user;
-      return result;
+      return this.mapToFrontend(user);
 
     } catch (error) {
       console.error(error);
@@ -49,21 +57,58 @@ export class UsersService {
     }
   }
 
+  // ... findAll, findOne, remove (mantêm iguais) ...
+
+  async update(id: string, data: UpdateUserDto) {
+    await this.findOne(id);
+
+    const dataToUpdate: any = { 
+        email: data.email,
+        // condominioId: data.condominioId // Se deixar aqui direto pode dar erro se for undefined
+    };
+
+    if (data.condominioId) dataToUpdate.condominioId = data.condominioId;
+    if (data.name) dataToUpdate.nome = data.name;
+    if (data.role) dataToUpdate.tipo = data.role;
+    if (data.password) {
+      dataToUpdate.senha = await bcrypt.hash(data.password, 10);
+    }
+
+    try {
+      const user = await prisma.user.update({
+        where: { id },
+        data: dataToUpdate,
+      });
+      return this.mapToFrontend(user);
+    } catch (error) {
+      throw new InternalServerErrorException('Erro ao atualizar usuário.');
+    }
+  }
+  
+  // Mantenha os outros métodos...
   async findAll() {
-    // Ao listar, nunca retornamos as senhas!
-    return await prisma.user.findMany({
-      select: {
-        id: true,
-        nome: true,
-        email: true,
-        tipo: true,
-        condominio: { select: { nome: true } } // Já trazemos o nome do condomínio junto
+    const users = await prisma.user.findMany({
+      orderBy: { nome: 'asc' }, 
+      include: {
+        condominio: { select: { nome: true } },
       }
     });
+    return users.map(user => this.mapToFrontend(user));
   }
 
-  // ... (implementaremos findOne, update e remove depois)
-  findOne(id: number) { return `This action returns a #${id} user`; }
-  update(id: number, updateUserDto: UpdateUserDto) { return `This action updates a #${id} user`; }
-  remove(id: number) { return `This action removes a #${id} user`; }
+  async findOne(id: string) {
+    const user = await prisma.user.findUnique({
+      where: { id },
+      include: {
+        condominio: true,
+      }
+    });
+    if (!user) throw new NotFoundException('Usuário não encontrado.');
+    return this.mapToFrontend(user);
+  }
+
+  async remove(id: string) {
+    await this.findOne(id);
+    return await prisma.user.delete({ where: { id } });
+  }
 }
