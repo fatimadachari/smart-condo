@@ -1,5 +1,4 @@
-import { Controller, Get, Post, Body, Patch, Param, Delete, HttpCode, HttpStatus, UseGuards } from '@nestjs/common'; // <--- Importe UseGuards
-import { AuthGuard } from '@nestjs/passport';
+import { Controller, Get, Post, Body, Patch, Param, Delete, HttpCode, HttpStatus, UseGuards, Query } from '@nestjs/common'; import { AuthGuard } from '@nestjs/passport';
 import { CondominiosService } from './condominios.service';
 import { CreateCondominioDto } from './dto/create-condominio.dto';
 import { UpdateCondominioDto } from './dto/update-condominio.dto';
@@ -30,8 +29,10 @@ export class CondominiosController {
     }
 
     @Delete(':id')
-    @HttpCode(HttpStatus.NO_CONTENT) // Retorna 204 (Sucesso sem conteúdo) padrão de mercado para Delete
-    remove(@Param('id') id: string) {
-        return this.condominiosService.remove(id);
+    @HttpCode(HttpStatus.NO_CONTENT)
+    // Adicionamos o @Query('force')
+    remove(@Param('id') id: string, @Query('force') force: string) {
+        const isForce = force === 'true';
+        return this.condominiosService.remove(id, isForce);
     }
 }

@@ -1,5 +1,4 @@
-import { Injectable, ConflictException, InternalServerErrorException, NotFoundException } from '@nestjs/common';
-import { CreateCondominioDto } from './dto/create-condominio.dto';
+import { Injectable, ConflictException, InternalServerErrorException, NotFoundException } from '@nestjs/common'; import { CreateCondominioDto } from './dto/create-condominio.dto';
 import { UpdateCondominioDto } from './dto/update-condominio.dto';
 import { prisma } from '@smart-condo/database';
 
@@ -42,11 +41,32 @@ export class CondominiosService {
         });
     }
 
-    async remove(id: string) {
-        await this.findOne(id); // Garante que existe antes de tentar deletar
+    async remove(id: string, force: boolean = false) {
+        await this.findOne(id);
 
-        return await prisma.condominio.delete({
-            where: { id },
-        });
+        try {
+            if (force) {
+                // MODO CASCATA MANUAL (Transação)
+                // Apaga tudo que está ligado ao condomínio primeiro
+                return await prisma.$transaction([
+                    prisma.user.deleteMany({ where: { condominioId: id } }),
+                    prisma.unidade.deleteMany({ where: { condominioId: id } }),
+                    prisma.condominio.delete({ where: { id } }),
+                ]);
+            } else {
+                // MODO SEGURO (Padrão)
+                return await prisma.condominio.delete({
+                    where: { id },
+                });
+            }
+        } catch (error) {
+            if (error.code === 'P2003') {
+                throw new ConflictException(
+                    'EXIST_DEPENDENCY' // Vamos usar um código fixo para o front identificar
+                );
+            }
+            console.error(error);
+            throw new InternalServerErrorException('Erro ao excluir condomínio.');
+        }
     }
 }
