@@ -2,7 +2,7 @@
 
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
-import { Building2, Users, LayoutDashboard, LogOut, Settings, Home, Megaphone } from 'lucide-react';
+import { Building2, Users, LayoutDashboard, LogOut, Settings, Home, Megaphone, CalendarCheck, Building } from 'lucide-react';
 import { useAuth } from '@/hooks/use-auth';
 
 export function Sidebar() {
@@ -16,6 +16,8 @@ export function Sidebar() {
         { name: 'Unidades', icon: Home, href: '/dashboard/unidades' },
         { name: 'Usuários', icon: Users, href: '/dashboard/usuarios' },
         { name: 'Configurações', icon: Settings, href: '/dashboard/configuracoes' },
+        { name: 'Reservas', icon: CalendarCheck, href: '/dashboard/reservas'},
+        { name: 'Áreas Comuns', icon: Building, href: '/dashboard/areas-comuns'},
     ];
 
     return (

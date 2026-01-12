@@ -7,6 +7,8 @@ import { UsersModule } from './users/users.module';
 import { AuthModule } from './auth/auth.module';
 import { UnidadesModule } from './unidades/unidades.module';
 import { AvisosModule } from './avisos/avisos.module';
+import { CommonAreasModule } from './common-areas/common-areas.module';
+import { BookingsModule } from './bookings/bookings.module';
 
 @Module({
   imports: [
@@ -15,7 +17,9 @@ import { AvisosModule } from './avisos/avisos.module';
     UsersModule,
     AuthModule, 
     UnidadesModule, 
-    AvisosModule
+    AvisosModule,
+    CommonAreasModule,
+    BookingsModule
   ],
   controllers: [AppController],
   providers: [AppService],

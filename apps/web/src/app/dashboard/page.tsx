@@ -9,7 +9,8 @@ import {
     ArrowRight,
     TrendingUp,
     Activity,
-    Megaphone
+    Megaphone,
+    CalendarCheck // <--- Importado
 } from 'lucide-react';
 import Link from 'next/link';
 import { useAuth } from '@/hooks/use-auth';
@@ -17,6 +18,7 @@ import { condominioService } from '@/services/condominio-service';
 import { unidadeService } from '@/services/unidade-service';
 import { usuarioService } from '@/services/usuario-service';
 import { avisosService } from '@/services/aviso-service';
+import { bookingService } from '@/services/booking-service'; // <--- Importado
 
 export default function DashboardPage() {
     const { user } = useAuth();
@@ -24,26 +26,29 @@ export default function DashboardPage() {
         condominios: 0,
         unidades: 0,
         usuarios: 0,
-        avisos: 0
+        avisos: 0,
+        reservas: 0 // <--- Novo estado
     });
     const [loading, setLoading] = useState(true);
 
     useEffect(() => {
         async function loadStats() {
             try {
-                // Buscamos tudo em paralelo para ser rápido
-                const [condos, units, users, avisosData] = await Promise.all([
+                // Buscamos tudo em paralelo (Adicionado bookingService)
+                const [condos, units, users, avisosData, bookingsData] = await Promise.all([
                     condominioService.getAll(),
                     unidadeService.getAll(),
                     usuarioService.getAll(),
-                    avisosService.getAll()
+                    avisosService.getAll(),
+                    bookingService.getAll() // <--- Chamada nova
                 ]);
 
                 setStats({
                     condominios: condos.length,
                     unidades: units.length,
                     usuarios: users.length,
-                    avisos: avisosData.length
+                    avisos: avisosData.length,
+                    reservas: bookingsData.length // <--- Setando valor
                 });
             } catch (error) {
                 console.error('Erro ao carregar estatísticas', error);
@@ -55,7 +60,7 @@ export default function DashboardPage() {
         loadStats();
     }, []);
 
-    // Componente de Card de Estatística (Interno para organização)
+    // Componente de Card de Estatística
     const StatCard = ({ title, value, icon: Icon, colorClass, delay }: any) => (
         <div
             className={`bg-white p-6 rounded-2xl border border-gray-100 shadow-sm hover:shadow-md transition-all duration-300 animate-in fade-in slide-in-from-bottom-4`}
@@ -98,44 +103,60 @@ export default function DashboardPage() {
                 </div>
             </div>
 
-            {/* Grid de Estatísticas */}
-            <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
+            {/* Grid de Estatísticas (Ajustado para 5 colunas em telas grandes) */}
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 gap-6">
+
+                {/* 1. RESERVAS (Novo - Destaque) */}
+                <StatCard
+                    title="Reservas Agendadas"
+                    value={stats.reservas}
+                    icon={CalendarCheck}
+                    colorClass="bg-pink-500 text-pink-500"
+                    delay="0ms"
+                />
+
+                {/* 2. AVISOS */}
                 <StatCard
                     title="Avisos Ativos"
                     value={stats.avisos}
                     icon={Megaphone}
                     colorClass="bg-orange-500 text-orange-500"
-                    delay="300ms"
+                    delay="100ms"
                 />
+
+                {/* 3. CONDOMINIOS */}
                 <StatCard
                     title="Condomínios"
                     value={stats.condominios}
                     icon={Building2}
                     colorClass="bg-terracotta-500 text-terracotta-500"
-                    delay="0ms"
+                    delay="200ms"
                 />
+
+                {/* 4. UNIDADES */}
                 <StatCard
                     title="Unidades Totais"
                     value={stats.unidades}
                     icon={Home}
                     colorClass="bg-blue-500 text-blue-500"
-                    delay="100ms"
+                    delay="300ms"
                 />
+
+                {/* 5. PESSOAS */}
                 <StatCard
                     title="Pessoas Cadastradas"
                     value={stats.usuarios}
                     icon={Users}
                     colorClass="bg-purple-500 text-purple-500"
-                    delay="200ms"
+                    delay="400ms"
                 />
             </div>
 
-            {/* Seção Inferior: Ações Rápidas e "Gráfico" Visual */}
+            {/* Seção Inferior */}
             <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
 
                 {/* Ações Rápidas */}
                 <div className="lg:col-span-1 bg-gradient-to-br from-gunmetal-800 to-gunmetal-900 rounded-2xl p-6 text-white shadow-xl relative overflow-hidden">
-                    {/* Efeito de fundo */}
                     <div className="absolute top-0 right-0 w-32 h-32 bg-terracotta-500 rounded-full blur-3xl opacity-20 -mr-10 -mt-10 pointer-events-none" />
 
                     <h3 className="text-lg text-terracotta-400 font-bold mb-6 flex items-center gap-2 relative z-10">
@@ -144,6 +165,20 @@ export default function DashboardPage() {
                     </h3>
 
                     <div className="space-y-3 relative z-10">
+                        {/* LINK RESERVAS (NOVO) */}
+                        <Link
+                            href="/dashboard/reservas"
+                            className="group flex items-center justify-between p-3 rounded-xl bg-white/10 hover:bg-white/20 border border-white/5 transition-all cursor-pointer"
+                        >
+                            <div className="flex items-center gap-3">
+                                <div className="p-2 rounded-lg bg-pink-500/20 text-pink-400">
+                                    <CalendarCheck className="w-4 h-4" />
+                                </div>
+                                <span className="font-medium text-sm text-pink-400">Nova Reserva</span>
+                            </div>
+                            <ArrowRight className="w-4 h-4 text-gray-400 group-hover:text-white group-hover:translate-x-1 transition-all" />
+                        </Link>
+
                         <Link
                             href="/dashboard/avisos"
                             className="group flex items-center justify-between p-3 rounded-xl bg-white/10 hover:bg-white/20 border border-white/5 transition-all cursor-pointer"
@@ -156,6 +191,7 @@ export default function DashboardPage() {
                             </div>
                             <ArrowRight className="w-4 h-4 text-gray-400 group-hover:text-white group-hover:translate-x-1 transition-all" />
                         </Link>
+
                         <Link
                             href="/dashboard/condominios"
                             className="group flex items-center justify-between p-3 rounded-xl bg-white/10 hover:bg-white/20 border border-white/5 transition-all cursor-pointer"
@@ -197,7 +233,7 @@ export default function DashboardPage() {
                     </div>
                 </div>
 
-                {/* Placeholder Visual de Atividade (Futuramente um Gráfico) */}
+                {/* Visão Geral (Sem alterações, apenas mantendo layout) */}
                 <div className="lg:col-span-2 bg-white rounded-2xl border border-gray-200 p-6 shadow-sm flex flex-col justify-between">
                     <div className="flex items-center justify-between mb-6">
                         <div>
@@ -209,10 +245,7 @@ export default function DashboardPage() {
                         </div>
                     </div>
 
-                    {/* Barras de Progresso Visuais */}
                     <div className="space-y-6 flex-1 flex flex-col justify-center">
-
-                        {/* Barra Condomínios */}
                         <div>
                             <div className="flex justify-between text-sm mb-2">
                                 <span className="font-medium text-gunmetal-600">Ocupação de Condomínios</span>
@@ -223,7 +256,6 @@ export default function DashboardPage() {
                             </div>
                         </div>
 
-                        {/* Barra Unidades */}
                         <div>
                             <div className="flex justify-between text-sm mb-2">
                                 <span className="font-medium text-gunmetal-600">Unidades Preenchidas</span>
@@ -234,26 +266,18 @@ export default function DashboardPage() {
                             </div>
                         </div>
 
-                        {/* Barra Usuários */}
                         <div>
                             <div className="flex justify-between text-sm mb-2">
-                                <span className="font-medium text-gunmetal-600">Base de Usuários</span>
-                                <span className="text-gray-400">{stats.usuarios} registrados</span>
+                                <span className="font-medium text-gunmetal-600">Base de Reservas</span>
+                                <span className="text-gray-400">{stats.reservas} agendadas</span>
                             </div>
                             <div className="h-3 w-full bg-gray-100 rounded-full overflow-hidden">
-                                <div className="h-full bg-purple-500 rounded-full w-[30%]" />
+                                <div className="h-full bg-pink-500 rounded-full w-[25%]" />
                             </div>
                         </div>
 
                     </div>
-
-                    <div className="mt-6 pt-6 border-t border-gray-100 text-center">
-                        <p className="text-xs text-gray-400">
-                            Dados atualizados em tempo real. Para relatórios detalhados, acesse as abas laterais.
-                        </p>
-                    </div>
                 </div>
-
             </div>
         </div>
     );

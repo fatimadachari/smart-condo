@@ -14,6 +14,7 @@ export type AuthResponse = {
 
 export type DecodedToken = {
     sub: string;
+    id: string;
     nome: string;
     tipo: string;
     exp: number;

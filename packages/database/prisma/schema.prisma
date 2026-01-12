@@ -33,6 +33,7 @@ model User {
   unidadeId    String?
   unidade      Unidade?   @relation(fields: [unidadeId], references: [id])
 
+  bookings     Booking[]
   avisos       Aviso[]
 
   criadoEm     DateTime @default(now())
@@ -64,4 +65,49 @@ model Aviso {
 
   autorId      String
   autor        User       @relation(fields: [autorId], references: [id])
+}
+
+// Representa locais como: Salão de Festas, Churrasqueira 1, etc.
+model CommonArea {
+  id          String    @id @default(uuid())
+  name        String
+  description String?
+  capacity    Int?      // Ex: Capacidade para 50 pessoas
+  photoUrl    String?   // Para mostrar uma foto bonita na UI
+  isActive    Boolean   @default(true) // Se estiver em reforma, marcamos como false
+  
+  bookings    Booking[]
+
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+
+  @@map("common_areas")
+}
+
+// Representa o agendamento
+model Booking {
+  id            String        @id @default(uuid())
+  date          DateTime      // A data e hora do início da reserva
+  endDate       DateTime?     // Opcional: data e hora do fim (útil se for por hora)
+  status        BookingStatus @default(PENDING)
+  
+  // Relacionamentos
+  userId        String
+  user          User          @relation(fields: [userId], references: [id])
+  
+  commonAreaId  String
+  commonArea    CommonArea    @relation(fields: [commonAreaId], references: [id])
+
+  createdAt     DateTime      @default(now())
+  updatedAt     DateTime      @updatedAt
+
+  @@map("bookings")
+}
+
+// Enum para controlar o estado da reserva
+enum BookingStatus {
+  PENDING   // Aguardando aprovação (se necessário)
+  CONFIRMED // Confirmado
+  CANCELLED // Cancelado pelo usuário ou admin
+  REJECTED  // Rejeitado pelo síndico
 }

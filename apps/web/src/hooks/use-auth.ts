@@ -14,20 +14,28 @@ export function useAuth() {
         const token = localStorage.getItem('smartcondo_token');
 
         if (!token) {
-            router.push('/'); // Chuta para o login se não tiver token
+            router.push('/');
             return;
         }
 
         try {
-            const decoded = jwtDecode<DecodedToken>(token);
-            // Opcional: Verificar se o token expirou (exp < Date.now() / 1000)
-            if (decoded.exp * 1000 < Date.now()) {
+            // Decodificamos o payload bruto
+            const decodedRaw = jwtDecode<any>(token);
+
+            // Verificação de Expiração
+            if (decodedRaw.exp * 1000 < Date.now()) {
                 localStorage.removeItem('smartcondo_token');
                 router.push('/');
                 return;
             }
 
-            setUser(decoded);
+            // Mapeamos o 'sub' (padrão JWT) para 'id' (padrão da nossa App)
+            const userMapped: DecodedToken = {
+                ...decodedRaw,
+                id: decodedRaw.sub // O pulo do gato!
+            };
+
+            setUser(userMapped);
         } catch (error) {
             localStorage.removeItem('smartcondo_token');
             router.push('/');
