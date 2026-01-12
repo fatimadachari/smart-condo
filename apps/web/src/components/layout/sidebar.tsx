@@ -11,17 +11,16 @@ export function Sidebar() {
 
     const menuItems = [
         { name: 'Visão Geral', icon: LayoutDashboard, href: '/dashboard' },
-        { name: 'Avisos', icon: Megaphone, href: '/dashboard/avisos' }, 
+        { name: 'Avisos', icon: Megaphone, href: '/dashboard/avisos' },
         { name: 'Condomínios', icon: Building2, href: '/dashboard/condominios' },
         { name: 'Unidades', icon: Home, href: '/dashboard/unidades' },
         { name: 'Usuários', icon: Users, href: '/dashboard/usuarios' },
-        { name: 'Configurações', icon: Settings, href: '/dashboard/configuracoes' },
-        { name: 'Reservas', icon: CalendarCheck, href: '/dashboard/reservas'},
-        { name: 'Áreas Comuns', icon: Building, href: '/dashboard/areas-comuns'},
+        { name: 'Áreas Comuns', icon: Building, href: '/dashboard/areas-comuns' },
+        { name: 'Reservas', icon: CalendarCheck, href: '/dashboard/reservas' },
     ];
 
     return (
-<aside className="w-64 bg-gunmetal-900 text-white flex flex-col h-screen fixed left-0 top-0 border-r border-gunmetal-700 z-40">
+        <aside className="w-64 bg-gunmetal-900 text-white flex flex-col h-screen fixed left-0 top-0 border-r border-gunmetal-700 z-40">
             {/* Logo Area */}
             <div className="h-16 flex items-center px-6 border-b border-gunmetal-700 bg-gunmetal-900">
                 <div className="flex items-center gap-2 text-terracotta-500">
