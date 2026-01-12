@@ -6,6 +6,7 @@ import { CondominiosModule } from './condominios/condominios.module';
 import { UsersModule } from './users/users.module';
 import { AuthModule } from './auth/auth.module';
 import { UnidadesModule } from './unidades/unidades.module';
+import { AvisosModule } from './avisos/avisos.module';
 
 @Module({
   imports: [
@@ -13,7 +14,8 @@ import { UnidadesModule } from './unidades/unidades.module';
     CondominiosModule,
     UsersModule,
     AuthModule, 
-    UnidadesModule
+    UnidadesModule, 
+    AvisosModule
   ],
   controllers: [AppController],
   providers: [AppService],

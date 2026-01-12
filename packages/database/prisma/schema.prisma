@@ -16,6 +16,7 @@ model Condominio {
   
   users     User[]
   unidades  Unidade[]
+  avisos    Aviso[]
 }
 
 // Usuários (Moradores, Síndicos, Porteiros)
@@ -32,6 +33,8 @@ model User {
   unidadeId    String?
   unidade      Unidade?   @relation(fields: [unidadeId], references: [id])
 
+  avisos       Aviso[]
+
   criadoEm     DateTime @default(now())
 }
 
@@ -47,4 +50,18 @@ model Unidade {
   moradores    User[]
 
   @@unique([condominioId, bloco, numero])
+}
+
+model Aviso {
+  id           String     @id @default(uuid())
+  titulo       String
+  descricao    String
+  tipo         String     @default("GERAL") // GERAL, URGENTE
+  criadoEm     DateTime   @default(now())
+  dataEvento  DateTime?
+  condominioId String
+  condominio   Condominio @relation(fields: [condominioId], references: [id])
+
+  autorId      String
+  autor        User       @relation(fields: [autorId], references: [id])
 }

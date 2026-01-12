@@ -8,20 +8,23 @@ import {
     PlusCircle,
     ArrowRight,
     TrendingUp,
-    Activity
+    Activity,
+    Megaphone
 } from 'lucide-react';
 import Link from 'next/link';
 import { useAuth } from '@/hooks/use-auth';
 import { condominioService } from '@/services/condominio-service';
 import { unidadeService } from '@/services/unidade-service';
 import { usuarioService } from '@/services/usuario-service';
+import { avisosService } from '@/services/aviso-service';
 
 export default function DashboardPage() {
     const { user } = useAuth();
     const [stats, setStats] = useState({
         condominios: 0,
         unidades: 0,
-        usuarios: 0
+        usuarios: 0,
+        avisos: 0
     });
     const [loading, setLoading] = useState(true);
 
@@ -29,16 +32,18 @@ export default function DashboardPage() {
         async function loadStats() {
             try {
                 // Buscamos tudo em paralelo para ser rápido
-                const [condos, units, users] = await Promise.all([
+                const [condos, units, users, avisosData] = await Promise.all([
                     condominioService.getAll(),
                     unidadeService.getAll(),
-                    usuarioService.getAll()
+                    usuarioService.getAll(),
+                    avisosService.getAll()
                 ]);
 
                 setStats({
                     condominios: condos.length,
                     unidades: units.length,
-                    usuarios: users.length
+                    usuarios: users.length,
+                    avisos: avisosData.length
                 });
             } catch (error) {
                 console.error('Erro ao carregar estatísticas', error);
@@ -94,7 +99,14 @@ export default function DashboardPage() {
             </div>
 
             {/* Grid de Estatísticas */}
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+            <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
+                <StatCard
+                    title="Avisos Ativos"
+                    value={stats.avisos}
+                    icon={Megaphone}
+                    colorClass="bg-orange-500 text-orange-500"
+                    delay="300ms"
+                />
                 <StatCard
                     title="Condomínios"
                     value={stats.condominios}
@@ -126,21 +138,33 @@ export default function DashboardPage() {
                     {/* Efeito de fundo */}
                     <div className="absolute top-0 right-0 w-32 h-32 bg-terracotta-500 rounded-full blur-3xl opacity-20 -mr-10 -mt-10 pointer-events-none" />
 
-                    <h3 className="text-lg font-bold mb-6 flex items-center gap-2 relative z-10">
+                    <h3 className="text-lg text-terracotta-400 font-bold mb-6 flex items-center gap-2 relative z-10">
                         <PlusCircle className="w-5 h-5 text-terracotta-400" />
                         Acesso Rápido
                     </h3>
 
                     <div className="space-y-3 relative z-10">
                         <Link
+                            href="/dashboard/avisos"
+                            className="group flex items-center justify-between p-3 rounded-xl bg-white/10 hover:bg-white/20 border border-white/5 transition-all cursor-pointer"
+                        >
+                            <div className="flex items-center gap-3">
+                                <div className="p-2 rounded-lg bg-orange-500/20 text-orange-400">
+                                    <Megaphone className="w-4 h-4" />
+                                </div>
+                                <span className="font-medium text-sm text-orange-400">Criar Aviso</span>
+                            </div>
+                            <ArrowRight className="w-4 h-4 text-gray-400 group-hover:text-white group-hover:translate-x-1 transition-all" />
+                        </Link>
+                        <Link
                             href="/dashboard/condominios"
                             className="group flex items-center justify-between p-3 rounded-xl bg-white/10 hover:bg-white/20 border border-white/5 transition-all cursor-pointer"
                         >
                             <div className="flex items-center gap-3">
-                                <div className="p-2 rounded-lg bg-terracotta-500/20 text-terracotta-400">
+                                <div className="p-2 rounded-lg bg-green-500/20 text-green-400">
                                     <Building2 className="w-4 h-4" />
                                 </div>
-                                <span className="font-medium text-sm">Novo Condomínio</span>
+                                <span className="font-medium text-sm text-green-400">Novo Condomínio</span>
                             </div>
                             <ArrowRight className="w-4 h-4 text-gray-400 group-hover:text-white group-hover:translate-x-1 transition-all" />
                         </Link>
@@ -153,7 +177,7 @@ export default function DashboardPage() {
                                 <div className="p-2 rounded-lg bg-blue-500/20 text-blue-400">
                                     <Home className="w-4 h-4" />
                                 </div>
-                                <span className="font-medium text-sm">Nova Unidade</span>
+                                <span className="font-medium text-sm text-blue-400">Nova Unidade</span>
                             </div>
                             <ArrowRight className="w-4 h-4 text-gray-400 group-hover:text-white group-hover:translate-x-1 transition-all" />
                         </Link>
@@ -166,7 +190,7 @@ export default function DashboardPage() {
                                 <div className="p-2 rounded-lg bg-purple-500/20 text-purple-400">
                                     <Users className="w-4 h-4" />
                                 </div>
-                                <span className="font-medium text-sm">Cadastrar Usuário</span>
+                                <span className="font-medium text-sm text-purple-400">Cadastrar Usuário</span>
                             </div>
                             <ArrowRight className="w-4 h-4 text-gray-400 group-hover:text-white group-hover:translate-x-1 transition-all" />
                         </Link>
