@@ -5,12 +5,11 @@ import {
     Building2,
     Home,
     Users,
-    PlusCircle,
+    Plus,
     ArrowRight,
-    TrendingUp,
-    Activity,
     Megaphone,
-    CalendarCheck // <--- Importado
+    CalendarCheck,
+    MoreHorizontal
 } from 'lucide-react';
 import Link from 'next/link';
 import { useAuth } from '@/hooks/use-auth';
@@ -18,7 +17,7 @@ import { condominioService } from '@/services/condominio-service';
 import { unidadeService } from '@/services/unidade-service';
 import { usuarioService } from '@/services/usuario-service';
 import { avisosService } from '@/services/aviso-service';
-import { bookingService } from '@/services/booking-service'; // <--- Importado
+import { bookingService } from '@/services/booking-service';
 
 export default function DashboardPage() {
     const { user } = useAuth();
@@ -27,20 +26,19 @@ export default function DashboardPage() {
         unidades: 0,
         usuarios: 0,
         avisos: 0,
-        reservas: 0 // <--- Novo estado
+        reservas: 0
     });
     const [loading, setLoading] = useState(true);
 
     useEffect(() => {
         async function loadStats() {
             try {
-                // Buscamos tudo em paralelo (Adicionado bookingService)
                 const [condos, units, users, avisosData, bookingsData] = await Promise.all([
                     condominioService.getAll(),
                     unidadeService.getAll(),
                     usuarioService.getAll(),
                     avisosService.getAll(),
-                    bookingService.getAll() // <--- Chamada nova
+                    bookingService.getAll()
                 ]);
 
                 setStats({
@@ -48,7 +46,7 @@ export default function DashboardPage() {
                     unidades: units.length,
                     usuarios: users.length,
                     avisos: avisosData.length,
-                    reservas: bookingsData.length // <--- Setando valor
+                    reservas: bookingsData.length
                 });
             } catch (error) {
                 console.error('Erro ao carregar estatísticas', error);
@@ -56,226 +54,128 @@ export default function DashboardPage() {
                 setLoading(false);
             }
         }
-
         loadStats();
     }, []);
 
-    // Componente de Card de Estatística
-    const StatCard = ({ title, value, icon: Icon, colorClass, delay }: any) => (
-        <div
-            className={`bg-white p-6 rounded-2xl border border-gray-100 shadow-sm hover:shadow-md transition-all duration-300 animate-in fade-in slide-in-from-bottom-4`}
+    // Card Minimalista de Luxo
+    const StatCard = ({ title, value, icon: Icon, delay }: any) => (
+        <div 
+            className="group bg-white p-8 rounded-2xl border border-stone-100 shadow-sm hover:shadow-soft transition-all duration-500 ease-out"
             style={{ animationDelay: delay }}
         >
-            <div className="flex items-start justify-between mb-4">
-                <div className={`p-3 rounded-xl ${colorClass} bg-opacity-10`}>
-                    <Icon className={`w-6 h-6 ${colorClass.replace('bg-', 'text-')}`} />
+            <div className="flex justify-between items-start mb-6">
+                <div className="p-3 rounded-xl bg-stone-50 border border-stone-100 text-stone-400 group-hover:text-clay-600 group-hover:bg-clay-50 group-hover:border-clay-100 transition-colors duration-300">
+                    <Icon className="w-6 h-6" strokeWidth={1.5} />
                 </div>
-                <span className="flex items-center text-xs font-medium text-green-600 bg-green-50 px-2 py-1 rounded-full">
-                    <TrendingUp className="w-3 h-3 mr-1" />
-                    Ativo
-                </span>
+                <MoreHorizontal className="w-5 h-5 text-stone-300 cursor-pointer hover:text-stone-500" />
             </div>
             <div>
-                <p className="text-sm font-medium text-gray-500 mb-1">{title}</p>
-                {loading ? (
-                    <div className="h-8 w-16 bg-gray-100 animate-pulse rounded" />
-                ) : (
-                    <h3 className="text-3xl font-bold text-gunmetal-600">{value}</h3>
-                )}
+                <h3 className="text-4xl font-light text-espresso-900 mb-2 tracking-tight">
+                    {loading ? <div className="h-10 w-16 bg-stone-100 animate-pulse rounded-md" /> : value}
+                </h3>
+                <p className="text-sm font-medium text-stone-500 uppercase tracking-wide">{title}</p>
             </div>
         </div>
     );
 
     return (
-        <div className="space-y-8">
+        <div className="space-y-10">
 
-            {/* Cabeçalho de Boas-vindas */}
-            <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
+            {/* Cabeçalho Elegante */}
+            <div className="flex flex-col md:flex-row md:items-end justify-between gap-4 pb-4 border-b border-stone-200">
                 <div>
-                    <h1 className="text-2xl font-bold text-gunmetal-600">
-                        Olá, {user?.nome || 'Gestor'}! 👋
+                    <h1 className="text-3xl font-light text-espresso-900">
+                        Bem-vindo, <span className="font-medium">{user?.nome || 'Gestor'}</span>
                     </h1>
-                    <p className="text-gray-500">Aqui está o resumo geral do seu ecossistema SmartCondo.</p>
+                    <p className="mt-2 text-stone-500 font-light">
+                        Visão geral de desempenho e atividades recentes.
+                    </p>
                 </div>
-                <div className="flex items-center gap-2 text-sm text-gray-400 bg-white px-4 py-2 rounded-full border border-gray-200 shadow-sm">
-                    <div className="w-2 h-2 rounded-full bg-green-500 animate-pulse" />
-                    Sistema Operacional
+                <div className="text-xs font-bold text-clay-600 uppercase tracking-widest bg-clay-50 px-4 py-2 rounded-full border border-clay-100">
+                   Status: Sistema Operacional
                 </div>
             </div>
 
-            {/* Grid de Estatísticas (Ajustado para 5 colunas em telas grandes) */}
+            {/* Grid de Estatísticas Minimalistas */}
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 gap-6">
-
-                {/* 1. RESERVAS (Novo - Destaque) */}
-                <StatCard
-                    title="Reservas Agendadas"
-                    value={stats.reservas}
-                    icon={CalendarCheck}
-                    colorClass="bg-pink-500 text-pink-500"
-                    delay="0ms"
-                />
-
-                {/* 2. AVISOS */}
-                <StatCard
-                    title="Avisos Ativos"
-                    value={stats.avisos}
-                    icon={Megaphone}
-                    colorClass="bg-orange-500 text-orange-500"
-                    delay="100ms"
-                />
-
-                {/* 3. CONDOMINIOS */}
-                <StatCard
-                    title="Condomínios"
-                    value={stats.condominios}
-                    icon={Building2}
-                    colorClass="bg-terracotta-500 text-terracotta-500"
-                    delay="200ms"
-                />
-
-                {/* 4. UNIDADES */}
-                <StatCard
-                    title="Unidades Totais"
-                    value={stats.unidades}
-                    icon={Home}
-                    colorClass="bg-blue-500 text-blue-500"
-                    delay="300ms"
-                />
-
-                {/* 5. PESSOAS */}
-                <StatCard
-                    title="Pessoas Cadastradas"
-                    value={stats.usuarios}
-                    icon={Users}
-                    colorClass="bg-purple-500 text-purple-500"
-                    delay="400ms"
-                />
+                <StatCard title="Reservas" value={stats.reservas} icon={CalendarCheck} delay="0ms" />
+                <StatCard title="Avisos" value={stats.avisos} icon={Megaphone} delay="100ms" />
+                <StatCard title="Condomínios" value={stats.condominios} icon={Building2} delay="200ms" />
+                <StatCard title="Unidades" value={stats.unidades} icon={Home} delay="300ms" />
+                <StatCard title="Usuários" value={stats.usuarios} icon={Users} delay="400ms" />
             </div>
 
-            {/* Seção Inferior */}
-            <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+            {/* Seção Inferior: Ações e Gráficos */}
+            <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
 
-                {/* Ações Rápidas */}
-                <div className="lg:col-span-1 bg-gradient-to-br from-gunmetal-800 to-gunmetal-900 rounded-2xl p-6 text-white shadow-xl relative overflow-hidden">
-                    <div className="absolute top-0 right-0 w-32 h-32 bg-terracotta-500 rounded-full blur-3xl opacity-20 -mr-10 -mt-10 pointer-events-none" />
+                {/* Card Escuro de Ações (Contraste Premium) */}
+                <div className="lg:col-span-1 bg-espresso-900 rounded-2xl p-8 text-white relative overflow-hidden shadow-2xl">
+                    {/* Elementos decorativos sutis */}
+                    <div className="absolute top-0 right-0 w-64 h-64 bg-gradient-to-br from-white/5 to-transparent rounded-full -mr-16 -mt-16 pointer-events-none" />
+                    
+                    <div className="relative z-10">
+                        <h3 className="text-xl font-light mb-8 flex items-center gap-3">
+                            <span className="p-1.5 bg-clay-500 rounded-lg"><Plus className="w-4 h-4 text-white" /></span>
+                            Ações Rápidas
+                        </h3>
 
-                    <h3 className="text-lg text-terracotta-400 font-bold mb-6 flex items-center gap-2 relative z-10">
-                        <PlusCircle className="w-5 h-5 text-terracotta-400" />
-                        Acesso Rápido
-                    </h3>
-
-                    <div className="space-y-3 relative z-10">
-                        {/* LINK RESERVAS (NOVO) */}
-                        <Link
-                            href="/dashboard/reservas"
-                            className="group flex items-center justify-between p-3 rounded-xl bg-white/10 hover:bg-white/20 border border-white/5 transition-all cursor-pointer"
-                        >
-                            <div className="flex items-center gap-3">
-                                <div className="p-2 rounded-lg bg-pink-500/20 text-pink-400">
-                                    <CalendarCheck className="w-4 h-4" />
-                                </div>
-                                <span className="font-medium text-sm text-pink-400">Nova Reserva</span>
-                            </div>
-                            <ArrowRight className="w-4 h-4 text-gray-400 group-hover:text-white group-hover:translate-x-1 transition-all" />
-                        </Link>
-
-                        <Link
-                            href="/dashboard/avisos"
-                            className="group flex items-center justify-between p-3 rounded-xl bg-white/10 hover:bg-white/20 border border-white/5 transition-all cursor-pointer"
-                        >
-                            <div className="flex items-center gap-3">
-                                <div className="p-2 rounded-lg bg-orange-500/20 text-orange-400">
-                                    <Megaphone className="w-4 h-4" />
-                                </div>
-                                <span className="font-medium text-sm text-orange-400">Criar Aviso</span>
-                            </div>
-                            <ArrowRight className="w-4 h-4 text-gray-400 group-hover:text-white group-hover:translate-x-1 transition-all" />
-                        </Link>
-
-                        <Link
-                            href="/dashboard/condominios"
-                            className="group flex items-center justify-between p-3 rounded-xl bg-white/10 hover:bg-white/20 border border-white/5 transition-all cursor-pointer"
-                        >
-                            <div className="flex items-center gap-3">
-                                <div className="p-2 rounded-lg bg-green-500/20 text-green-400">
-                                    <Building2 className="w-4 h-4" />
-                                </div>
-                                <span className="font-medium text-sm text-green-400">Novo Condomínio</span>
-                            </div>
-                            <ArrowRight className="w-4 h-4 text-gray-400 group-hover:text-white group-hover:translate-x-1 transition-all" />
-                        </Link>
-
-                        <Link
-                            href="/dashboard/unidades"
-                            className="group flex items-center justify-between p-3 rounded-xl bg-white/10 hover:bg-white/20 border border-white/5 transition-all cursor-pointer"
-                        >
-                            <div className="flex items-center gap-3">
-                                <div className="p-2 rounded-lg bg-blue-500/20 text-blue-400">
-                                    <Home className="w-4 h-4" />
-                                </div>
-                                <span className="font-medium text-sm text-blue-400">Nova Unidade</span>
-                            </div>
-                            <ArrowRight className="w-4 h-4 text-gray-400 group-hover:text-white group-hover:translate-x-1 transition-all" />
-                        </Link>
-
-                        <Link
-                            href="/dashboard/usuarios"
-                            className="group flex items-center justify-between p-3 rounded-xl bg-white/10 hover:bg-white/20 border border-white/5 transition-all cursor-pointer"
-                        >
-                            <div className="flex items-center gap-3">
-                                <div className="p-2 rounded-lg bg-purple-500/20 text-purple-400">
-                                    <Users className="w-4 h-4" />
-                                </div>
-                                <span className="font-medium text-sm text-purple-400">Cadastrar Usuário</span>
-                            </div>
-                            <ArrowRight className="w-4 h-4 text-gray-400 group-hover:text-white group-hover:translate-x-1 transition-all" />
-                        </Link>
+                        <div className="space-y-4">
+                            {[
+                                { label: 'Nova Reserva', href: '/dashboard/reservas', icon: CalendarCheck },
+                                { label: 'Criar Aviso', href: '/dashboard/avisos', icon: Megaphone },
+                                { label: 'Novo Condomínio', href: '/dashboard/condominios', icon: Building2 },
+                            ].map((action, idx) => (
+                                <Link
+                                    key={idx}
+                                    href={action.href}
+                                    className="group flex items-center justify-between p-4 rounded-xl bg-white/5 hover:bg-white/10 border border-white/5 hover:border-white/10 transition-all duration-300"
+                                >
+                                    <div className="flex items-center gap-4">
+                                        <action.icon className="w-5 h-5 text-clay-300 group-hover:text-white transition-colors" strokeWidth={1.5} />
+                                        <span className="text-sm font-medium text-stone-300 group-hover:text-white">{action.label}</span>
+                                    </div>
+                                    <ArrowRight className="w-4 h-4 text-stone-600 group-hover:text-clay-300 group-hover:translate-x-1 transition-all" />
+                                </Link>
+                            ))}
+                        </div>
+                        
+                        <div className="mt-8 pt-6 border-t border-white/10 text-center">
+                            <Link href="/dashboard/ajuda" className="text-xs text-stone-500 hover:text-clay-300 transition-colors uppercase tracking-widest">
+                                Precisa de ajuda?
+                            </Link>
+                        </div>
                     </div>
                 </div>
 
-                {/* Visão Geral (Sem alterações, apenas mantendo layout) */}
-                <div className="lg:col-span-2 bg-white rounded-2xl border border-gray-200 p-6 shadow-sm flex flex-col justify-between">
-                    <div className="flex items-center justify-between mb-6">
+                {/* Área Principal Branca (Placeholder para gráfico ou lista) */}
+                <div className="lg:col-span-2 bg-white rounded-2xl border border-stone-100 p-8 shadow-sm flex flex-col">
+                    <div className="flex justify-between items-center mb-8">
                         <div>
-                            <h3 className="text-lg font-bold text-gunmetal-600 flex items-center gap-2">
-                                <Activity className="w-5 h-5 text-gray-400" />
-                                Visão Geral do Sistema
-                            </h3>
-                            <p className="text-sm text-gray-400">Distribuição de recursos cadastrados</p>
+                            <h3 className="text-lg font-semibold text-espresso-900">Ocupação do Sistema</h3>
+                            <p className="text-sm text-stone-500">Métricas de preenchimento de unidades e cadastros</p>
                         </div>
+                        <button className="text-sm text-clay-600 font-medium hover:text-clay-700">Ver relatório</button>
                     </div>
 
-                    <div className="space-y-6 flex-1 flex flex-col justify-center">
-                        <div>
-                            <div className="flex justify-between text-sm mb-2">
-                                <span className="font-medium text-gunmetal-600">Ocupação de Condomínios</span>
-                                <span className="text-gray-400">{stats.condominios} ativos</span>
+                    <div className="space-y-8 flex-1 justify-center py-4">
+                        {[
+                            { label: 'Ocupação de Condomínios', total: stats.condominios, max: 100, color: 'bg-clay-500' },
+                            { label: 'Unidades Preenchidas', total: stats.unidades, max: 200, color: 'bg-espresso-600' },
+                            { label: 'Reservas do Mês', total: stats.reservas, max: 50, color: 'bg-stone-400' },
+                        ].map((item, idx) => (
+                            <div key={idx}>
+                                <div className="flex justify-between text-sm mb-3">
+                                    <span className="font-medium text-stone-700">{item.label}</span>
+                                    <span className="text-stone-400 font-mono">{item.total}</span>
+                                </div>
+                                <div className="h-2 w-full bg-stone-100 rounded-full overflow-hidden">
+                                    <div 
+                                        className={`h-full ${item.color} rounded-full transition-all duration-1000 ease-out`} 
+                                        style={{ width: `${Math.min((item.total / item.max) * 100, 100)}%` }} 
+                                    />
+                                </div>
                             </div>
-                            <div className="h-3 w-full bg-gray-100 rounded-full overflow-hidden">
-                                <div className="h-full bg-terracotta-500 rounded-full w-[45%]" />
-                            </div>
-                        </div>
-
-                        <div>
-                            <div className="flex justify-between text-sm mb-2">
-                                <span className="font-medium text-gunmetal-600">Unidades Preenchidas</span>
-                                <span className="text-gray-400">{stats.unidades} cadastradas</span>
-                            </div>
-                            <div className="h-3 w-full bg-gray-100 rounded-full overflow-hidden">
-                                <div className="h-full bg-blue-500 rounded-full w-[60%]" />
-                            </div>
-                        </div>
-
-                        <div>
-                            <div className="flex justify-between text-sm mb-2">
-                                <span className="font-medium text-gunmetal-600">Base de Reservas</span>
-                                <span className="text-gray-400">{stats.reservas} agendadas</span>
-                            </div>
-                            <div className="h-3 w-full bg-gray-100 rounded-full overflow-hidden">
-                                <div className="h-full bg-pink-500 rounded-full w-[25%]" />
-                            </div>
-                        </div>
-
+                        ))}
                     </div>
                 </div>
             </div>

@@ -2,7 +2,23 @@
 @tailwind components;
 @tailwind utilities;
 
-/* Se quiser garantir que o fundo padrão seja o Alabaster */
+/* Melhora a renderização da fonte para parecer mais "fina" e elegante */
 body {
-  background-color: #F9F7F5; /* Cor Alabaster */
+  @apply bg-stone-50 text-stone-800 antialiased;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+/* Scrollbar personalizada minimalista */
+::-webkit-scrollbar {
+  width: 6px;
+}
+::-webkit-scrollbar-track {
+  @apply bg-transparent;
+}
+::-webkit-scrollbar-thumb {
+  @apply bg-stone-300 rounded-full;
+}
+::-webkit-scrollbar-thumb:hover {
+  @apply bg-clay-400;
 }

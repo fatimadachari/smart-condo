@@ -2,7 +2,7 @@
 
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
-import { Building2, Users, LayoutDashboard, LogOut, Settings, Home, Megaphone, CalendarCheck, Building } from 'lucide-react';
+import { Building2, Users, LayoutDashboard, LogOut, Home, Megaphone, CalendarCheck, Building } from 'lucide-react';
 import { useAuth } from '@/hooks/use-auth';
 
 export function Sidebar() {
@@ -20,17 +20,20 @@ export function Sidebar() {
     ];
 
     return (
-        <aside className="w-64 bg-gunmetal-900 text-white flex flex-col h-screen fixed left-0 top-0 border-r border-gunmetal-700 z-40">
+        <aside className="w-72 bg-espresso-900 text-stone-300 flex flex-col h-screen fixed left-0 top-0 border-r border-espresso-800 z-40 shadow-2xl transition-all duration-300">
             {/* Logo Area */}
-            <div className="h-16 flex items-center px-6 border-b border-gunmetal-700 bg-gunmetal-900">
-                <div className="flex items-center gap-2 text-terracotta-500">
-                    <Building2 className="w-6 h-6" />
-                    <span className="text-xl font-bold text-white tracking-wide">SmartCondo</span>
+            <div className="h-24 flex items-center px-8 bg-espresso-900">
+                <div className="flex items-center gap-3">
+                    <div className="p-2 bg-white/5 rounded border border-white/10">
+                         <Building2 className="w-5 h-5 text-clay-300" strokeWidth={1.5} />
+                    </div>
+                    <span className="text-xl font-light text-white tracking-widest uppercase">Smart<span className="font-bold text-clay-200">Condo</span></span>
                 </div>
             </div>
 
             {/* Menu Links */}
-            <nav className="flex-1 py-6 px-3 space-y-1">
+            <nav className="flex-1 py-8 px-4 space-y-2 overflow-y-auto custom-scrollbar">
+                <p className="px-4 text-xs font-bold text-espresso-500 uppercase tracking-widest mb-4">Menu Principal</p>
                 {menuItems.map((item) => {
                     const isActive = pathname === item.href;
                     const Icon = item.icon;
@@ -39,27 +42,33 @@ export function Sidebar() {
                         <Link
                             key={item.href}
                             href={item.href}
-                            className={`flex items-center gap-3 px-3 py-3 rounded-lg text-sm font-medium transition-all duration-200 group
-                ${isActive
-                                    ? 'bg-terracotta-500 text-white shadow-glow'
-                                    : 'text-gray-400 hover:bg-gunmetal-800 hover:text-white'
-                                }`}
+                            className={`flex items-center gap-4 px-4 py-3.5 rounded-xl text-sm transition-all duration-300 group relative overflow-hidden
+                            ${isActive 
+                                ? 'bg-white/5 text-white shadow-inner-light' 
+                                : 'text-stone-400 hover:bg-white/5 hover:text-stone-200'
+                            }`}
                         >
-                            <Icon className={`w-5 h-5 ${isActive ? 'text-white' : 'text-gray-500 group-hover:text-terracotta-400'}`} />
-                            {item.name}
+                            {/* Indicador de Ativo (Linha lateral) */}
+                            {isActive && <div className="absolute left-0 top-2 bottom-2 w-1 bg-clay-400 rounded-r-full" />}
+
+                            <Icon 
+                                className={`w-5 h-5 transition-colors duration-300 ${isActive ? 'text-clay-300' : 'text-espresso-600 group-hover:text-clay-300'}`} 
+                                strokeWidth={1.5} 
+                            />
+                            <span className="font-medium tracking-wide">{item.name}</span>
                         </Link>
                     );
                 })}
             </nav>
 
             {/* Footer / Logout */}
-            <div className="p-4 border-t border-gunmetal-700">
+            <div className="p-6 border-t border-espresso-800 bg-espresso-900/50">
                 <button
                     onClick={logout}
-                    className="flex items-center gap-3 px-3 py-3 w-full rounded-lg text-sm font-medium text-red-400 hover:bg-red-900/20 hover:text-red-300 transition-colors"
+                    className="flex items-center gap-3 px-4 py-3 w-full rounded-xl text-sm font-medium text-stone-400 hover:text-red-300 hover:bg-red-500/10 transition-all group"
                 >
-                    <LogOut className="w-5 h-5" />
-                    Sair do Sistema
+                    <LogOut className="w-5 h-5 group-hover:stroke-red-400 transition-colors" strokeWidth={1.5} />
+                    Encerrar Sessão
                 </button>
             </div>
         </aside>

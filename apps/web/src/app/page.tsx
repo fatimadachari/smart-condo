@@ -3,7 +3,7 @@
 import { useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { useRouter } from 'next/navigation';
-import { Building2, ArrowRight, Loader2 } from 'lucide-react'; // Ícone de prédio moderno
+import { Building2, ArrowRight, Loader2, Lock, Mail } from 'lucide-react';
 import { authService } from '@/services/auth-service';
 import { LoginCredentials } from '@/types/auth-types';
 
@@ -21,83 +21,97 @@ export default function LoginPage() {
       authService.saveToken(response.access_token);
       router.push('/dashboard');
     } catch (err) {
-      setError('Credenciais inválidas. Verifique e tente novamente.');
+      setError('Acesso não autorizado. Verifique suas credenciais.');
     } finally {
       setIsLoading(false);
     }
   };
 
   return (
-    <div className="min-h-screen flex font-sans">
+    <div className="min-h-screen flex font-sans bg-stone-50 text-stone-800">
       
-      {/* COLUNA ESQUERDA - IDENTIDADE VISUAL */}
-      <div className="hidden lg:flex w-5/12 bg-gunmetal-600 relative flex-col justify-between p-12 overflow-hidden">
-        {/* Padrão de fundo sutil */}
-        <div className="absolute inset-0 opacity-10 bg-[radial-gradient(circle_at_center,_var(--tw-gradient-stops))] from-gray-500 to-transparent" />
+      {/* COLUNA ESQUERDA - AMBIENTAÇÃO */}
+      <div className="hidden lg:flex w-1/2 relative overflow-hidden bg-espresso-900">
+        {/* Imagem de Fundo (Placeholder para imagem de arquitetura real) */}
+        <div className="absolute inset-0 bg-[url('https://images.unsplash.com/photo-1600607687939-ce8a6c25118c?q=80&w=2653&auto=format&fit=crop')] bg-cover bg-center opacity-60 mix-blend-overlay grayscale-[20%]" />
         
-        {/* Logo/Marca */}
-        <div className="relative z-10 flex items-center gap-3 text-white">
-          <div className="p-2 bg-white/10 backdrop-blur-sm rounded-lg border border-white/10">
-            <Building2 className="w-6 h-6 text-terracotta-400" />
+        {/* Overlay Gradiente Quente */}
+        <div className="absolute inset-0 bg-gradient-to-t from-espresso-900 via-espresso-900/60 to-transparent" />
+
+        <div className="relative z-10 flex flex-col justify-between p-16 w-full h-full">
+          <div className="flex items-center gap-3">
+            <div className="p-2.5 bg-white/10 backdrop-blur-md rounded-lg border border-white/5">
+              <Building2 className="w-5 h-5 text-clay-200" strokeWidth={1.5} />
+            </div>
+            <span className="text-xl font-semibold tracking-widest text-white uppercase opacity-90">SmartCondo</span>
           </div>
-          <span className="text-xl font-bold tracking-wide">SmartCondo</span>
-        </div>
 
-        {/* Texto Conceitual */}
-        <div className="relative z-10 max-w-md">
-          <h1 className="text-4xl font-bold text-white mb-6 leading-tight">
-            Gestão que transforma condomínios em <span className="text-terracotta-400">comunidades.</span>
-          </h1>
-          <p className="text-gray-400 text-lg">
-            Tecnologia invisível, segurança presente e o conforto que o seu lar merece.
-          </p>
-        </div>
+          <div className="max-w-lg">
+            <h1 className="text-5xl font-light text-white mb-8 leading-[1.1]">
+              A excelência que <br />
+              <span className="font-semibold text-clay-200">seu patrimônio</span> merece.
+            </h1>
+            <p className="text-stone-300 text-lg font-light leading-relaxed border-l border-clay-500/50 pl-6">
+              Gestão condominial elevada ao estado da arte. Tecnologia, transparência e design em um só lugar.
+            </p>
+          </div>
 
-        {/* Rodapé decorativo */}
-        <div className="relative z-10 text-xs text-gray-500 uppercase tracking-widest">
-          Enterprise System v1.0
+          <div className="flex justify-between items-end text-xs text-stone-500 tracking-widest uppercase">
+            <span>© 2026 SmartCondo</span>
+            <span>Estilo & Segurança</span>
+          </div>
         </div>
       </div>
 
-      {/* COLUNA DIREITA - FORMULÁRIO */}
-      <div className="flex-1 flex items-center justify-center bg-alabaster p-8">
-        <div className="w-full max-w-md space-y-10">
+      {/* COLUNA DIREITA - LOGIN CLEAN */}
+      <div className="flex-1 flex items-center justify-center p-8 lg:p-16 bg-stone-50">
+        <div className="w-full max-w-[420px]">
           
-          <div className="text-center lg:text-left">
-            <h2 className="text-3xl font-bold text-gunmetal-600">Bem-vindo</h2>
-            <p className="mt-2 text-gray-500">Acesse sua conta para continuar.</p>
+          <div className="mb-12">
+            <h2 className="text-3xl font-semibold text-espresso-800 tracking-tight">Login</h2>
+            <p className="mt-3 text-stone-500 font-light">Bem-vindo de volta ao seu painel de controle.</p>
           </div>
 
-          <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
+          <form onSubmit={handleSubmit(onSubmit)} className="space-y-8">
             
-            <div className="space-y-5">
-              {/* Input Email */}
-              <div>
-                <label className="block text-sm font-semibold text-gunmetal-600 mb-2">E-mail</label>
-                <input
-                  {...register('email', { required: 'E-mail obrigatório' })}
-                  type="email"
-                  placeholder="ex: sindico@smartcondo.com"
-                  className="w-full px-4 py-3 bg-white border border-gray-200 rounded-xl text-gunmetal-600 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-terracotta-500/20 focus:border-terracotta-500 transition-all duration-200"
-                />
-                {errors.email && <span className="text-xs text-red-500 mt-1 block">{errors.email.message}</span>}
+            <div className="space-y-6">
+              {/* Input Email Minimalista */}
+              <div className="group">
+                <label className="block text-xs font-bold text-stone-500 uppercase tracking-wider mb-2 ml-1">E-mail Corporativo</label>
+                <div className="relative flex items-center">
+                  <Mail className="absolute left-4 w-5 h-5 text-stone-400 group-focus-within:text-clay-500 transition-colors duration-300" strokeWidth={1.5} />
+                  <input
+                    {...register('email', { required: 'O e-mail é necessário' })}
+                    type="email"
+                    className="w-full pl-12 pr-4 py-4 bg-white border border-stone-200 rounded-xl text-stone-700 placeholder-stone-300 focus:outline-none focus:border-clay-400 focus:ring-4 focus:ring-clay-100 transition-all duration-300"
+                    placeholder="nome@empresa.com"
+                  />
+                </div>
+                {errors.email && <span className="text-xs text-red-500 mt-1 ml-1">{errors.email.message}</span>}
               </div>
 
-              {/* Input Senha */}
-              <div>
-                <label className="block text-sm font-semibold text-gunmetal-600 mb-2">Senha</label>
-                <input
-                  {...register('senha', { required: 'Senha obrigatória' })}
-                  type="password"
-                  placeholder="••••••••"
-                  className="w-full px-4 py-3 bg-white border border-gray-200 rounded-xl text-gunmetal-600 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-terracotta-500/20 focus:border-terracotta-500 transition-all duration-200"
-                />
-                {errors.senha && <span className="text-xs text-red-500 mt-1 block">{errors.senha.message}</span>}
+              {/* Input Senha Minimalista */}
+              <div className="group">
+                <div className="flex justify-between items-center mb-2 ml-1">
+                  <label className="block text-xs font-bold text-stone-500 uppercase tracking-wider">Senha</label>
+                  <a href="#" className="text-xs text-clay-600 hover:text-clay-700 font-medium transition-colors">Esqueceu a senha?</a>
+                </div>
+                <div className="relative flex items-center">
+                  <Lock className="absolute left-4 w-5 h-5 text-stone-400 group-focus-within:text-clay-500 transition-colors duration-300" strokeWidth={1.5} />
+                  <input
+                    {...register('senha', { required: 'A senha é necessária' })}
+                    type="password"
+                    className="w-full pl-12 pr-4 py-4 bg-white border border-stone-200 rounded-xl text-stone-700 placeholder-stone-300 focus:outline-none focus:border-clay-400 focus:ring-4 focus:ring-clay-100 transition-all duration-300"
+                    placeholder="••••••••"
+                  />
+                </div>
+                {errors.senha && <span className="text-xs text-red-500 mt-1 ml-1">{errors.senha.message}</span>}
               </div>
             </div>
 
             {error && (
-              <div className="p-4 rounded-lg bg-red-50 text-red-600 text-sm border border-red-100 flex items-center justify-center">
+              <div className="p-4 rounded-lg bg-red-50/50 border border-red-100 text-red-600 text-sm flex items-center gap-2">
+                <span className="w-1.5 h-1.5 rounded-full bg-red-500" />
                 {error}
               </div>
             )}
@@ -105,22 +119,24 @@ export default function LoginPage() {
             <button
               type="submit"
               disabled={isLoading}
-              className="w-full flex items-center justify-center py-4 px-6 rounded-xl text-white bg-terracotta-500 hover:bg-terracotta-600 font-semibold text-lg transition-all duration-300 shadow-glow hover:shadow-lg disabled:opacity-70 disabled:cursor-not-allowed group"
+              className="w-full flex items-center justify-center py-4 px-6 rounded-xl text-white bg-espresso-800 hover:bg-espresso-900 transition-all duration-300 shadow-lg shadow-stone-200 hover:shadow-xl hover:-translate-y-0.5 disabled:opacity-70 disabled:cursor-not-allowed disabled:transform-none group"
             >
               {isLoading ? (
-                <Loader2 className="w-6 h-6 animate-spin" />
+                <Loader2 className="w-5 h-5 animate-spin" />
               ) : (
                 <>
-                  Entrar
-                  <ArrowRight className="ml-2 w-5 h-5 group-hover:translate-x-1 transition-transform" />
+                  <span className="font-medium tracking-wide">Acessar Sistema</span>
+                  <ArrowRight className="ml-2 w-4 h-4 group-hover:translate-x-1 transition-transform opacity-70" />
                 </>
               )}
             </button>
           </form>
 
-          <p className="text-center text-sm text-gray-400">
-            Esqueceu a senha? <a href="#" className="text-terracotta-500 hover:text-terracotta-600 font-medium">Recuperar acesso</a>
-          </p>
+          <div className="mt-12 text-center">
+            <p className="text-stone-400 text-sm">
+              Não tem uma conta? <a href="#" className="text-clay-600 font-semibold hover:underline decoration-clay-300 underline-offset-4">Fale com o Administrador</a>
+            </p>
+          </div>
         </div>
       </div>
     </div>

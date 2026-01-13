@@ -3,7 +3,7 @@
 import { useEffect, useState } from 'react';
 import { createPortal } from 'react-dom';
 import { useForm } from 'react-hook-form';
-import { X, User, Save, Loader2, Key } from 'lucide-react';
+import { X, User, Save, Loader2, Key, Mail, BadgeCheck } from 'lucide-react';
 import { usuarioService, CreateUsuarioDto, Usuario, UserRole } from '@/services/usuario-service';
 import { condominioService, Condominio } from '@/services/condominio-service';
 
@@ -27,25 +27,21 @@ export function UsuarioFormDialog({
 
     const { register, handleSubmit, reset, setValue, formState: { errors } } = useForm<CreateUsuarioDto>();
 
-    // Carregar lista de condomínios
     useEffect(() => {
         setMounted(true);
         condominioService.getAll().then(setCondominios).catch(console.error);
         return () => setMounted(false);
     }, []);
 
-    // Setup do formulário ao abrir
     useEffect(() => {
         if (isOpen) {
             if (usuarioToEdit) {
-                // EDIÇÃO
                 setValue('name', usuarioToEdit.name);
                 setValue('email', usuarioToEdit.email);
                 setValue('role', usuarioToEdit.role);
                 setValue('condominioId', usuarioToEdit.condominioId || '');
-                setValue('password', ''); // Senha começa vazia na edição
+                setValue('password', '');
             } else {
-                // CRIAÇÃO
                 reset({ name: '', email: '', role: UserRole.MORADOR, condominioId: '', password: '' });
             }
             setError(null);
@@ -58,8 +54,6 @@ export function UsuarioFormDialog({
     const onSubmit = async (data: CreateUsuarioDto) => {
         setIsSubmitting(true);
         setError(null);
-
-        // Regra: Na edição, se senha vier vazia, remove do payload para não sobrescrever
         const payload = { ...data };
         if (usuarioToEdit && !payload.password) {
             delete payload.password;
@@ -76,8 +70,7 @@ export function UsuarioFormDialog({
             onClose();
         } catch (err: any) {
             console.error(err);
-            const msg = err.response?.data?.message || 'Erro ao salvar usuário.';
-            setError(msg);
+            setError(err.response?.data?.message || 'Erro ao salvar usuário.');
         } finally {
             setIsSubmitting(false);
         }
@@ -87,106 +80,116 @@ export function UsuarioFormDialog({
 
     return createPortal(
         <div className="fixed inset-0 z-[9999] flex items-center justify-center p-4">
-            <div className="absolute inset-0 bg-gunmetal-900/60 backdrop-blur-sm" onClick={onClose} />
+            <div className="absolute inset-0 bg-stone-900/40 backdrop-blur-sm transition-opacity" onClick={onClose} />
 
-            <div className="relative z-10 bg-white rounded-2xl shadow-2xl w-full max-w-lg overflow-hidden flex flex-col max-h-[90vh]">
+            <div className="relative z-10 bg-white rounded-2xl shadow-2xl w-full max-w-lg overflow-hidden flex flex-col max-h-[90vh] animate-in zoom-in-95 duration-200">
                 {/* Header */}
-                <div className="px-6 py-4 border-b border-gray-100 flex items-center justify-between bg-gray-50/50">
-                    <div className="flex items-center gap-3">
-                        <div className="w-10 h-10 rounded-lg bg-terracotta-100 flex items-center justify-center text-terracotta-600">
-                            <User className="w-5 h-5" />
+                <div className="px-8 py-5 border-b border-stone-100 flex items-center justify-between bg-white">
+                    <div className="flex items-center gap-4">
+                        <div className="p-2.5 bg-stone-50 rounded-xl">
+                            <User className="w-6 h-6 text-clay-600" strokeWidth={1.5} />
                         </div>
                         <div>
-                            <h2 className="text-lg font-bold text-gunmetal-600">
+                            <h2 className="text-lg font-semibold text-espresso-900">
                                 {usuarioToEdit ? 'Editar Usuário' : 'Novo Usuário'}
                             </h2>
-                            <p className="text-xs text-gray-500">Gerencie o acesso ao sistema</p>
+                            <p className="text-xs text-stone-500 font-light">Credenciais e permissões.</p>
                         </div>
                     </div>
-                    <button onClick={onClose} className="p-2 text-gray-400 hover:bg-gray-100 rounded-full">
-                        <X className="w-5 h-5" />
+                    <button onClick={onClose} className="p-2 hover:bg-stone-50 rounded-full text-stone-400 hover:text-espresso-800 transition-colors">
+                        <X className="w-5 h-5" strokeWidth={1.5} />
                     </button>
                 </div>
 
                 {/* Form */}
-                <form onSubmit={handleSubmit(onSubmit)} className="p-6 space-y-5 overflow-y-auto">
+                <form onSubmit={handleSubmit(onSubmit)} className="p-8 space-y-6 overflow-y-auto custom-scrollbar">
 
-                    {/* Nome */}
-                    <div>
-                        <label className="block text-sm font-medium text-gunmetal-600 mb-1.5">Nome Completo <span className="text-red-500">*</span></label>
+                    <div className="space-y-1.5">
+                        <label className="text-xs font-bold text-stone-500 uppercase tracking-wider ml-1">Nome Completo</label>
                         <input
                             {...register('name', { required: 'Nome é obrigatório' })}
-                            className="w-full px-4 py-2.5 bg-white border border-gray-200 rounded-lg text-gunmetal-600 focus:outline-none focus:ring-2 focus:ring-terracotta-500/20 focus:border-terracotta-500"
+                            className="w-full px-4 py-3 bg-stone-50 border border-stone-200 rounded-xl text-espresso-900 placeholder-stone-400 focus:outline-none focus:border-clay-300 focus:ring-4 focus:ring-clay-100/50 transition-all"
                             placeholder="Ex: João da Silva"
                         />
-                        {errors.name && <span className="text-xs text-red-500 mt-1">{errors.name.message}</span>}
+                        {errors.name && <span className="text-xs text-red-500 ml-1">{errors.name.message}</span>}
                     </div>
 
-                    {/* Email */}
-                    <div>
-                        <label className="block text-sm font-medium text-gunmetal-600 mb-1.5">E-mail de Acesso <span className="text-red-500">*</span></label>
-                        <input
-                            {...register('email', { required: 'E-mail é obrigatório' })}
-                            type="email"
-                            className="w-full px-4 py-2.5 bg-white border border-gray-200 rounded-lg text-gunmetal-600 focus:outline-none focus:ring-2 focus:ring-terracotta-500/20 focus:border-terracotta-500"
-                            placeholder="joao@email.com"
-                        />
-                    </div>
-
-                    <div className="grid grid-cols-2 gap-4">
-                        {/* Perfil */}
-                        <div>
-                            <label className="block text-sm font-medium text-gunmetal-600 mb-1.5">Perfil <span className="text-red-500">*</span></label>
-                            <select
-                                {...register('role', { required: true })}
-                                className="w-full px-4 py-2.5 bg-white border border-gray-200 rounded-lg text-gunmetal-600 focus:outline-none focus:ring-2 focus:ring-terracotta-500/20 focus:border-terracotta-500"
-                            >
-                                <option value={UserRole.MORADOR}>Morador</option>
-                                <option value={UserRole.SINDICO}>Síndico</option>
-                                <option value={UserRole.PORTEIRO}>Porteiro</option>
-                                <option value={UserRole.ADMIN}>Administrador</option>
-                            </select>
-                        </div>
-
-                        {/* Condomínio */}
-                        <div>
-                            <label className="block text-sm font-medium text-gunmetal-600 mb-1.5">Vínculo</label>
-                            <select
-                                {...register('condominioId')}
-                                className="w-full px-4 py-2.5 bg-white border border-gray-200 rounded-lg text-gunmetal-600 focus:outline-none focus:ring-2 focus:ring-terracotta-500/20 focus:border-terracotta-500"
-                            >
-                                <option value="">Sem vínculo</option>
-                                {condominios.map(c => (
-                                    <option key={c.id} value={c.id}>{c.nome}</option>
-                                ))}
-                            </select>
+                    <div className="space-y-1.5">
+                        <label className="text-xs font-bold text-stone-500 uppercase tracking-wider ml-1">E-mail de Acesso</label>
+                        <div className="relative group">
+                            <Mail className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-stone-400 group-focus-within:text-clay-500 transition-colors" strokeWidth={1.5} />
+                            <input
+                                {...register('email', { required: 'E-mail é obrigatório' })}
+                                type="email"
+                                className="w-full pl-12 pr-4 py-3 bg-stone-50 border border-stone-200 rounded-xl text-espresso-900 placeholder-stone-400 focus:outline-none focus:border-clay-300 focus:ring-4 focus:ring-clay-100/50 transition-all"
+                                placeholder="joao@email.com"
+                            />
                         </div>
                     </div>
 
-                    {/* Senha */}
-                    <div className="pt-2 border-t border-gray-100">
-                        <label className="block text-sm font-medium text-gunmetal-600 mb-1.5 flex items-center gap-2">
-                            <Key className="w-4 h-4 text-terracotta-500" />
-                            Senha
-                            {usuarioToEdit && <span className="text-xs font-normal text-gray-400">(Opcional na edição)</span>}
+                    <div className="grid grid-cols-2 gap-6">
+                        <div className="space-y-1.5">
+                            <label className="text-xs font-bold text-stone-500 uppercase tracking-wider ml-1">Perfil</label>
+                            <div className="relative">
+                                <select
+                                    {...register('role', { required: true })}
+                                    className="w-full px-4 py-3 bg-stone-50 border border-stone-200 rounded-xl text-espresso-900 focus:outline-none focus:border-clay-300 focus:ring-4 focus:ring-clay-100/50 transition-all appearance-none"
+                                >
+                                    <option value={UserRole.MORADOR}>Morador</option>
+                                    <option value={UserRole.SINDICO}>Síndico</option>
+                                    <option value={UserRole.PORTEIRO}>Porteiro</option>
+                                    <option value={UserRole.ADMIN}>Admin</option>
+                                </select>
+                                <div className="absolute right-4 top-1/2 -translate-y-1/2 pointer-events-none text-stone-400"><svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" /></svg></div>
+                            </div>
+                        </div>
+
+                        <div className="space-y-1.5">
+                            <label className="text-xs font-bold text-stone-500 uppercase tracking-wider ml-1">Vínculo</label>
+                             <div className="relative">
+                                <select
+                                    {...register('condominioId')}
+                                    className="w-full px-4 py-3 bg-stone-50 border border-stone-200 rounded-xl text-espresso-900 focus:outline-none focus:border-clay-300 focus:ring-4 focus:ring-clay-100/50 transition-all appearance-none"
+                                >
+                                    <option value="">Sem vínculo</option>
+                                    {condominios.map(c => (
+                                        <option key={c.id} value={c.id}>{c.nome}</option>
+                                    ))}
+                                </select>
+                                <div className="absolute right-4 top-1/2 -translate-y-1/2 pointer-events-none text-stone-400"><svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" /></svg></div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div className="space-y-1.5 pt-2 border-t border-stone-100">
+                        <label className="text-xs font-bold text-stone-500 uppercase tracking-wider ml-1 flex items-center gap-2">
+                            Senha de Acesso
+                            {usuarioToEdit && <span className="text-[10px] font-normal text-stone-400 normal-case bg-stone-100 px-2 py-0.5 rounded-full">Opcional na edição</span>}
                         </label>
-                        <input
-                            {...register('password', { required: !usuarioToEdit && 'Senha é obrigatória' })}
-                            type="password"
-                            className="w-full px-4 py-2.5 bg-white border border-gray-200 rounded-lg text-gunmetal-600 focus:outline-none focus:ring-2 focus:ring-terracotta-500/20 focus:border-terracotta-500"
-                            placeholder={usuarioToEdit ? "Deixe em branco para manter a atual" : "Crie uma senha segura"}
-                        />
-                        {errors.password && <span className="text-xs text-red-500 mt-1">{errors.password.message}</span>}
+                        <div className="relative group">
+                            <Key className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-stone-400 group-focus-within:text-clay-500 transition-colors" strokeWidth={1.5} />
+                            <input
+                                {...register('password', { required: !usuarioToEdit && 'Senha é obrigatória' })}
+                                type="password"
+                                className="w-full pl-12 pr-4 py-3 bg-stone-50 border border-stone-200 rounded-xl text-espresso-900 placeholder-stone-400 focus:outline-none focus:border-clay-300 focus:ring-4 focus:ring-clay-100/50 transition-all"
+                                placeholder={usuarioToEdit ? "••••••••" : "Crie uma senha segura"}
+                            />
+                        </div>
+                         {errors.password && <span className="text-xs text-red-500 ml-1">{errors.password.message}</span>}
                     </div>
 
-                    {error && <div className="p-3 bg-red-50 text-red-600 text-sm rounded-lg border border-red-100">{error}</div>}
+                    {error && (
+                         <div className="p-4 bg-red-50/50 text-red-600 text-sm rounded-xl border border-red-100 flex items-center gap-2">
+                            <span className="w-1.5 h-1.5 bg-red-500 rounded-full"/> {error}
+                        </div>
+                    )}
 
-                    <div className="pt-4 flex justify-end gap-3">
-                        <button type="button" onClick={onClose} className="px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50">Cancelar</button>
+                    <div className="pt-4 flex justify-end gap-3 border-t border-stone-100">
+                        <button type="button" onClick={onClose} className="px-6 py-3 rounded-xl text-sm font-medium text-stone-500 hover:bg-stone-50 hover:text-espresso-800 transition-colors">Cancelar</button>
                         <button
                             type="submit"
                             disabled={isSubmitting}
-                            className="px-6 py-2 text-sm font-medium text-white bg-terracotta-500 hover:bg-terracotta-600 rounded-lg flex items-center gap-2 disabled:opacity-70"
+                            className="px-6 py-3 bg-espresso-800 hover:bg-espresso-900 text-white rounded-xl text-sm font-medium shadow-lg shadow-stone-200 hover:shadow-xl hover:-translate-y-0.5 transition-all flex items-center gap-2 disabled:opacity-70 disabled:cursor-not-allowed"
                         >
                             {isSubmitting ? <Loader2 className="w-4 h-4 animate-spin" /> : <Save className="w-4 h-4" />}
                             Salvar

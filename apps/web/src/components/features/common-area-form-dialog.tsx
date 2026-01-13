@@ -3,7 +3,7 @@
 import { useEffect, useState } from 'react';
 import { createPortal } from 'react-dom';
 import { useForm } from 'react-hook-form';
-import { X, Loader2, Users, Building } from 'lucide-react';
+import { X, Loader2, Users, Building, Save, Power } from 'lucide-react';
 import { commonAreaService, CreateCommonAreaDto, CommonArea } from '@/services/common-area-service';
 
 interface CommonAreaFormDialogProps {
@@ -22,7 +22,8 @@ export function CommonAreaFormDialog({
     const [mounted, setMounted] = useState(false);
     const [isSubmitting, setIsSubmitting] = useState(false);
     
-    const { register, handleSubmit, reset, setValue } = useForm<CreateCommonAreaDto>();
+    const { register, handleSubmit, reset, setValue, watch, formState: { errors } } = useForm<CreateCommonAreaDto>();
+    const isActive = watch('isActive');
 
     useEffect(() => {
         setMounted(true);
@@ -53,7 +54,6 @@ export function CommonAreaFormDialog({
     const onSubmit = async (data: CreateCommonAreaDto) => {
         setIsSubmitting(true);
         try {
-            // Converter capacidade para número (o input HTML retorna string)
             const payload = {
                 ...data,
                 capacity: Number(data.capacity)
@@ -79,60 +79,92 @@ export function CommonAreaFormDialog({
 
     return createPortal(
         <div className="fixed inset-0 z-[9999] flex items-center justify-center p-4">
-            <div className="absolute inset-0 bg-black/60 backdrop-blur-sm" onClick={onClose} />
+            <div className="absolute inset-0 bg-stone-900/40 backdrop-blur-sm transition-opacity" onClick={onClose} />
             
-            <div className="relative z-10 bg-white rounded-2xl shadow-2xl w-full max-w-lg overflow-hidden flex flex-col max-h-[90vh]">
-                <div className="px-6 py-4 border-b border-gray-100 flex justify-between items-center bg-gray-50">
-                    <h2 className="text-lg font-bold text-gray-700">
-                        {areaToEdit ? 'Editar Área' : 'Nova Área Comum'}
-                    </h2>
-                    <button onClick={onClose}><X className="w-5 h-5 text-gray-400 hover:text-red-500 transition-colors" /></button>
-                </div>
-
-                <form onSubmit={handleSubmit(onSubmit)} className="p-6 space-y-5 overflow-y-auto">
-                    
-                    {/* NOME */}
-                    <div>
-                        <label className="block text-sm font-medium text-gray-700 mb-1">Nome do Espaço</label>
-                        <div className="relative">
-                            <Building className="absolute left-3 top-2.5 w-5 h-5 text-gray-400" />
-                            <input 
-                                {...register('name', { required: true })} 
-                                className="w-full border border-gray-300 rounded-lg p-2 pl-10 focus:ring-2 focus:ring-terracotta-500 outline-none" 
-                                placeholder="Ex: Salão de Festas A" 
-                            />
+            <div className="relative z-10 bg-white rounded-2xl shadow-2xl w-full max-w-lg overflow-hidden flex flex-col max-h-[90vh] animate-in zoom-in-95 duration-200">
+                
+                {/* Header */}
+                <div className="px-8 py-5 border-b border-stone-100 flex justify-between items-center bg-white">
+                    <div className="flex items-center gap-4">
+                        <div className="p-2.5 bg-stone-50 rounded-xl">
+                            <Building className="w-6 h-6 text-clay-600" strokeWidth={1.5} />
+                        </div>
+                        <div>
+                            <h2 className="text-lg font-semibold text-espresso-900">
+                                {areaToEdit ? 'Editar Espaço' : 'Nova Área Comum'}
+                            </h2>
+                            <p className="text-xs text-stone-500 font-light">Detalhes do local reservável.</p>
                         </div>
                     </div>
+                    <button onClick={onClose} className="p-2 hover:bg-stone-50 rounded-full text-stone-400 hover:text-espresso-800 transition-colors">
+                        <X className="w-5 h-5" strokeWidth={1.5} />
+                    </button>
+                </div>
 
-                    {/* CAPACIDADE */}
-                    <div>
-                        <label className="block text-sm font-medium text-gray-700 mb-1">Capacidade (Pessoas)</label>
-                        <div className="relative">
-                            <Users className="absolute left-3 top-2.5 w-5 h-5 text-gray-400" />
-                            <input 
-                                type="number"
-                                min="1"
-                                {...register('capacity', { required: true, min: 1 })} 
-                                className="w-full border border-gray-300 rounded-lg p-2 pl-10 focus:ring-2 focus:ring-terracotta-500 outline-none" 
-                            />
+                <form onSubmit={handleSubmit(onSubmit)} className="p-8 space-y-6 overflow-y-auto custom-scrollbar">
+                    
+                    {/* NOME */}
+                    <div className="space-y-1.5">
+                        <label className="text-xs font-bold text-stone-500 uppercase tracking-wider ml-1">Nome do Espaço</label>
+                        <input 
+                            {...register('name', { required: 'Nome é obrigatório' })} 
+                            className="w-full px-4 py-3 bg-stone-50 border border-stone-200 rounded-xl text-espresso-900 placeholder-stone-400 focus:outline-none focus:border-clay-300 focus:ring-4 focus:ring-clay-100/50 transition-all" 
+                            placeholder="Ex: Salão de Festas A" 
+                        />
+                        {errors.name && <span className="text-xs text-red-500 ml-1">{errors.name.message}</span>}
+                    </div>
+
+                    <div className="grid grid-cols-2 gap-6">
+                        {/* CAPACIDADE */}
+                        <div className="space-y-1.5">
+                            <label className="text-xs font-bold text-stone-500 uppercase tracking-wider ml-1">Capacidade</label>
+                            <div className="relative group">
+                                <Users className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-stone-400 group-focus-within:text-clay-500 transition-colors" strokeWidth={1.5} />
+                                <input 
+                                    type="number"
+                                    min="1"
+                                    {...register('capacity', { required: true, min: 1 })} 
+                                    className="w-full pl-12 pr-4 py-3 bg-stone-50 border border-stone-200 rounded-xl text-espresso-900 focus:outline-none focus:border-clay-300 focus:ring-4 focus:ring-clay-100/50 transition-all" 
+                                />
+                            </div>
+                        </div>
+
+                        {/* STATUS TOGGLE */}
+                        <div className="space-y-1.5">
+                            <label className="text-xs font-bold text-stone-500 uppercase tracking-wider ml-1">Status</label>
+                            <label className={`
+                                cursor-pointer flex items-center justify-between px-4 py-3 rounded-xl border transition-all
+                                ${isActive ? 'bg-green-50 border-green-200 text-green-800' : 'bg-stone-50 border-stone-200 text-stone-500'}
+                            `}>
+                                <div className="flex items-center gap-2">
+                                    <Power className="w-4 h-4" />
+                                    <span className="text-sm font-medium">{isActive ? 'Disponível' : 'Manutenção'}</span>
+                                </div>
+                                <input type="checkbox" {...register('isActive')} className="hidden" />
+                                <div className={`w-3 h-3 rounded-full ${isActive ? 'bg-green-500 animate-pulse' : 'bg-stone-300'}`} />
+                            </label>
                         </div>
                     </div>
 
                     {/* DESCRIÇÃO */}
-                    <div>
-                        <label className="block text-sm font-medium text-gray-700 mb-1">Descrição / Regras (Opcional)</label>
+                    <div className="space-y-1.5">
+                        <label className="text-xs font-bold text-stone-500 uppercase tracking-wider ml-1">Regras / Descrição</label>
                         <textarea 
                             {...register('description')} 
                             rows={3} 
-                            className="w-full border border-gray-300 rounded-lg p-2 focus:ring-2 focus:ring-terracotta-500 outline-none"
+                            className="w-full px-4 py-3 bg-stone-50 border border-stone-200 rounded-xl text-espresso-900 placeholder-stone-400 focus:outline-none focus:border-clay-300 focus:ring-4 focus:ring-clay-100/50 transition-all resize-none"
                             placeholder="Ex: Inclui limpeza pós-uso. Horário máximo 22h."
                         />
                     </div>
 
-                    <div className="flex justify-end gap-2 pt-4 border-t border-gray-100 mt-2">
-                        <button type="button" onClick={onClose} className="px-4 py-2 border rounded-lg hover:bg-gray-50 text-gray-600">Cancelar</button>
-                        <button type="submit" disabled={isSubmitting} className="px-4 py-2 bg-terracotta-500 hover:bg-terracotta-600 text-white rounded-lg flex items-center gap-2 font-medium shadow-lg shadow-terracotta-500/20">
-                            {isSubmitting && <Loader2 className="animate-spin w-4 h-4" />}
+                    <div className="pt-4 flex justify-end gap-3 border-t border-stone-100">
+                        <button type="button" onClick={onClose} className="px-6 py-3 rounded-xl text-sm font-medium text-stone-500 hover:bg-stone-50 hover:text-espresso-800 transition-colors">Cancelar</button>
+                        <button 
+                            type="submit" 
+                            disabled={isSubmitting} 
+                            className="px-6 py-3 bg-espresso-800 hover:bg-espresso-900 text-white rounded-xl text-sm font-medium shadow-lg shadow-stone-200 hover:shadow-xl hover:-translate-y-0.5 transition-all flex items-center gap-2 disabled:opacity-70 disabled:cursor-not-allowed"
+                        >
+                            {isSubmitting ? <Loader2 className="animate-spin w-4 h-4" /> : <Save className="w-4 h-4" />}
                             Salvar Área
                         </button>
                     </div>

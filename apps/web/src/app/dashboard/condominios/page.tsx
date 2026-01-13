@@ -1,23 +1,21 @@
 'use client';
 
 import { useEffect, useState } from 'react';
-import { Plus, Search, Building2, Trash2, Edit2, Loader2, MapPin } from 'lucide-react';
+import { Plus, Search, Building2, Trash2, Edit2, Loader2, MapPin, MoreHorizontal } from 'lucide-react';
 import { condominioService, Condominio } from '@/services/condominio-service';
 import { ConfirmationDialog } from '@/components/ui/confirmation-dialog';
-// 1. IMPORTAR O NOVO FORMULÁRIO
 import { CondominioFormDialog } from '@/components/features/condominio-form-dialog';
 
 export default function CondominiosPage() {
   const [condominios, setCondominios] = useState<Condominio[]>([]);
   const [loading, setLoading] = useState(true);
+  const [searchTerm, setSearchTerm] = useState('');
 
-  // Estados de Exclusão
+  // Estados de Exclusão e Edição
   const [condoToDelete, setCondoToDelete] = useState<string | null>(null);
   const [isProcessing, setIsProcessing] = useState(false);
   const [isDeleteOpen, setIsDeleteOpen] = useState(false);
   const [isForceDeleteOpen, setIsForceDeleteOpen] = useState(false);
-
-  // 2. NOVOS ESTADOS PARA O FORMULÁRIO
   const [isFormOpen, setIsFormOpen] = useState(false);
   const [editingCondo, setEditingCondo] = useState<Condominio | null>(null);
 
@@ -37,38 +35,30 @@ export default function CondominiosPage() {
     loadData();
   }, []);
 
-  // --- LÓGICA DO FORMULÁRIO ---
-  
-  // Abrir para CRIAR
   const handleOpenNew = () => {
     setEditingCondo(null);
     setIsFormOpen(true);
   };
 
-  // Abrir para EDITAR
   const handleOpenEdit = (condo: Condominio) => {
     setEditingCondo(condo);
     setIsFormOpen(true);
   };
 
-  // Callback de Sucesso (Chamado pelo Modal quando salva)
   const handleFormSuccess = (savedCondo: Condominio) => {
     if (editingCondo) {
-      // Se estava editando, atualiza o item na lista
       setCondominios(prev => prev.map(c => c.id === savedCondo.id ? savedCondo : c));
     } else {
-      // Se estava criando, adiciona no topo da lista
       setCondominios(prev => [savedCondo, ...prev]);
     }
   };
 
-  // --- LÓGICA DE EXCLUSÃO (Mantenha igual) ---
   const handleInitialDelete = (id: string) => {
     setCondoToDelete(id);
     setIsDeleteOpen(true);
   };
 
-  const confirmStandardDelete = async () => { /* ... código igual ao anterior ... */ 
+  const confirmStandardDelete = async () => {
     if (!condoToDelete) return;
     setIsProcessing(true);
     try {
@@ -88,7 +78,7 @@ export default function CondominiosPage() {
     }
   };
 
-  const confirmForceDelete = async () => { /* ... código igual ao anterior ... */
+  const confirmForceDelete = async () => {
     if (!condoToDelete) return;
     setIsProcessing(true);
     try {
@@ -103,98 +93,98 @@ export default function CondominiosPage() {
     }
   };
 
+  const filteredCondominios = condominios.filter(c => 
+    c.nome.toLowerCase().includes(searchTerm.toLowerCase()) || 
+    c.endereco?.toLowerCase().includes(searchTerm.toLowerCase())
+  );
+
   return (
-    <div className="space-y-6">
+    <div className="space-y-8 animate-in fade-in duration-500">
       
-      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
+      {/* Header & Actions */}
+      <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-6">
         <div>
-          <h1 className="text-2xl font-bold text-gunmetal-600 flex items-center gap-2">
-            <Building2 className="w-8 h-8 text-terracotta-500" />
-            Gestão de Condomínios
+          <h1 className="text-3xl font-light text-espresso-900 tracking-tight">
+            Gestão de <span className="font-semibold">Condomínios</span>
           </h1>
-          <p className="text-gray-500">Administre os empreendimentos cadastrados no sistema.</p>
+          <p className="mt-2 text-stone-500 font-light">Administre seu portfólio de empreendimentos.</p>
         </div>
 
-        {/* 3. ATUALIZAR O BOTÃO NOVO */}
-        <button 
-          onClick={handleOpenNew}
-          className="flex items-center gap-2 bg-terracotta-500 text-white px-5 py-2.5 rounded-lg hover:bg-terracotta-600 transition-colors shadow-glow font-medium"
-        >
-          <Plus className="w-5 h-5" />
-          Novo Condomínio
-        </button>
-      </div>
-
-      <div className="bg-white p-4 rounded-xl border border-gray-200 shadow-sm flex items-center gap-4">
-        <div className="relative flex-1">
-          <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" />
-          <input 
-            type="text" 
-            placeholder="Buscar por nome ou endereço..." 
-            className="w-full pl-10 pr-4 py-2 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-terracotta-500/20 focus:border-terracotta-500"
-          />
+        <div className="flex items-center gap-3 w-full md:w-auto">
+            <div className="relative group flex-1 md:w-64">
+                <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-stone-400 group-focus-within:text-clay-500 transition-colors" />
+                <input 
+                    type="text" 
+                    placeholder="Buscar condomínio..." 
+                    value={searchTerm}
+                    onChange={(e) => setSearchTerm(e.target.value)}
+                    className="w-full pl-10 pr-4 py-3 bg-white border border-stone-200 rounded-xl text-sm focus:outline-none focus:border-clay-300 focus:ring-4 focus:ring-clay-100 transition-all shadow-sm"
+                />
+            </div>
+            
+            <button 
+                onClick={handleOpenNew}
+                className="flex items-center gap-2 bg-espresso-800 hover:bg-espresso-900 text-white px-6 py-3 rounded-xl transition-all shadow-lg shadow-stone-200 hover:shadow-xl hover:-translate-y-0.5 group"
+            >
+                <Plus className="w-5 h-5 group-hover:rotate-90 transition-transform duration-300" />
+                <span className="font-medium tracking-wide">Novo</span>
+            </button>
         </div>
       </div>
 
       {loading ? (
-        <div className="flex justify-center py-20">
-          <Loader2 className="w-10 h-10 text-terracotta-500 animate-spin" />
+        <div className="flex justify-center py-32">
+          <Loader2 className="w-8 h-8 text-clay-400 animate-spin" />
         </div>
-      ) : condominios.length === 0 ? (
-        <div className="text-center py-20 bg-white rounded-xl border border-dashed border-gray-300">
-          <Building2 className="w-16 h-16 text-gray-300 mx-auto mb-4" />
-          <h3 className="text-lg font-medium text-gunmetal-600">Nenhum condomínio encontrado</h3>
-          <p className="text-gray-500">Comece cadastrando o primeiro empreendimento.</p>
+      ) : filteredCondominios.length === 0 ? (
+        <div className="text-center py-24 bg-white rounded-3xl border border-stone-100 shadow-sm flex flex-col items-center">
+          <div className="p-4 bg-stone-50 rounded-full mb-4">
+            <Building2 className="w-8 h-8 text-stone-300" />
+          </div>
+          <h3 className="text-lg font-medium text-espresso-800">Nenhum condomínio encontrado</h3>
+          <p className="text-stone-400 mt-1">Comece cadastrando o primeiro empreendimento.</p>
         </div>
       ) : (
-        <div className="bg-white rounded-xl border border-gray-200 shadow-sm overflow-hidden">
-          <table className="w-full text-left">
-            <thead className="bg-gray-50 border-b border-gray-100">
-              <tr>
-                <th className="px-6 py-4 text-xs font-semibold text-gray-500 uppercase tracking-wider">Nome</th>
-                <th className="px-6 py-4 text-xs font-semibold text-gray-500 uppercase tracking-wider">Endereço</th>
-                <th className="px-6 py-4 text-xs font-semibold text-gray-500 uppercase tracking-wider text-right">Ações</th>
-              </tr>
-            </thead>
-            <tbody className="divide-y divide-gray-100">
-              {condominios.map((condo) => (
-                <tr key={condo.id} className="hover:bg-gray-50 transition-colors group">
-                  <td className="px-6 py-4">
-                    <div className="font-medium text-gunmetal-600">{condo.nome}</div>
-                  </td>
-                  <td className="px-6 py-4 text-gray-500">
-                    <div className="flex items-center gap-2">
-                      <MapPin className="w-4 h-4 text-gray-400" />
-                      {condo.endereco || 'Sem endereço cadastrado'}
+        <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
+          {filteredCondominios.map((condo, index) => (
+            <div 
+                key={condo.id} 
+                className="group relative bg-white rounded-2xl border border-stone-100 p-8 shadow-sm hover:shadow-soft transition-all duration-300 hover:-translate-y-1"
+                style={{ animationDelay: `${index * 50}ms` }}
+            >
+                <div className="flex justify-between items-start mb-6">
+                    <div className="p-3 bg-stone-50 rounded-xl text-stone-400 group-hover:text-clay-600 group-hover:bg-clay-50 transition-colors duration-300">
+                        <Building2 className="w-6 h-6" strokeWidth={1.5} />
                     </div>
-                  </td>
-                  <td className="px-6 py-4 text-right">
-                    <div className="flex items-center justify-end gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
-                      
-                      {/* 4. ATUALIZAR O BOTÃO EDITAR */}
-                      <button 
-                        onClick={() => handleOpenEdit(condo)}
-                        className="p-2 text-gray-400 hover:text-terracotta-500 hover:bg-terracotta-50 rounded-lg transition-colors"
-                      >
-                        <Edit2 className="w-4 h-4" />
-                      </button>
-                      
-                      <button 
-                        onClick={() => handleInitialDelete(condo.id)}
-                        className="p-2 text-gray-400 hover:text-red-500 hover:bg-red-50 rounded-lg transition-colors"
-                      >
-                        <Trash2 className="w-4 h-4" />
-                      </button>
+                    
+                    <div className="flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity duration-200">
+                        <button 
+                            onClick={() => handleOpenEdit(condo)}
+                            className="p-2 text-stone-400 hover:text-clay-600 hover:bg-stone-50 rounded-lg transition-colors"
+                        >
+                            <Edit2 className="w-4 h-4" />
+                        </button>
+                        <button 
+                            onClick={() => handleInitialDelete(condo.id)}
+                            className="p-2 text-stone-400 hover:text-red-500 hover:bg-red-50 rounded-lg transition-colors"
+                        >
+                            <Trash2 className="w-4 h-4" />
+                        </button>
                     </div>
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
+                </div>
+
+                <h3 className="text-xl font-semibold text-espresso-900 mb-2">{condo.nome}</h3>
+                
+                <div className="flex items-start gap-2 text-stone-500 text-sm font-light mt-4 pt-4 border-t border-stone-50">
+                    <MapPin className="w-4 h-4 mt-0.5 text-clay-400" />
+                    <span className="leading-relaxed">{condo.endereco || 'Endereço não informado'}</span>
+                </div>
+            </div>
+          ))}
         </div>
       )}
 
-      {/* --- MODAL DE FORMULÁRIO (NOVO/EDITAR) --- */}
+      {/* Modais mantidos */}
       <CondominioFormDialog 
         isOpen={isFormOpen}
         onClose={() => setIsFormOpen(false)}
@@ -202,7 +192,6 @@ export default function CondominiosPage() {
         condominioToEdit={editingCondo}
       />
 
-      {/* --- MODAIS DE CONFIRMAÇÃO (MANTER) --- */}
       <ConfirmationDialog 
         isOpen={isDeleteOpen}
         onClose={() => setIsDeleteOpen(false)}
@@ -221,9 +210,9 @@ export default function CondominiosPage() {
           setCondoToDelete(null);
         }}
         onConfirm={confirmForceDelete}
-        title="⚠️ Ação Destrutiva"
-        description="Este condomínio possui MORADORES e UNIDADES vinculados. Se continuar, TODOS esses dados serão apagados permanentemente."
-        confirmText="Entendo os riscos, excluir tudo"
+        title="⚠️ Ação Crítica"
+        description="Este condomínio possui MORADORES e UNIDADES vinculados. Excluir apagará TODOS esses dados permanentemente."
+        confirmText="Confirmar Exclusão Total"
         variant="danger"
         isLoading={isProcessing}
         countdown={5}

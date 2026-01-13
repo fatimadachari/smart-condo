@@ -1,64 +1,45 @@
 'use client';
 
 import { Sidebar } from '@/components/layout/sidebar';
+import { Topbar } from '@/components/layout/topbar'; // Certifique-se de ter criado o arquivo src/components/layout/topbar.tsx
 import { useAuth } from '@/hooks/use-auth';
-import { Loader2, Bell, Search } from 'lucide-react';
+import { Loader2 } from 'lucide-react';
 
 export default function DashboardLayout({ children }: { children: React.ReactNode }) {
-    const { user, loading } = useAuth();
+    const { loading } = useAuth();
 
-    // Enquanto verifica o token, mostra loading
+    // Estado de Carregamento Inicial
     if (loading) {
         return (
-            <div className="h-screen w-full flex items-center justify-center bg-alabaster">
-                <Loader2 className="w-8 h-8 text-terracotta-500 animate-spin" />
+            <div className="h-screen w-full flex items-center justify-center bg-stone-50">
+                <Loader2 className="w-10 h-10 text-clay-600 animate-spin" />
             </div>
         );
     }
 
     return (
-        <div className="min-h-screen bg-alabaster">
+        <div className="min-h-screen bg-stone-50 font-sans selection:bg-clay-200 selection:text-espresso-900 flex">
+            
+            {/* Sidebar Fixa à Esquerda */}
             <Sidebar />
 
-            {/* Área Principal (deslocada para direita por causa da Sidebar fixa) */}
-            <main className="ml-64 min-h-screen flex flex-col">
+            {/* Área Principal */}
+            {/* ml-72 (18rem/288px) compensa a largura da Sidebar fixa */}
+            <main className="ml-72 flex-1 flex flex-col min-h-screen transition-all duration-300 relative">
+                
+                {/* Topbar Sticky (Separado em componente) */}
+                <Topbar />
 
-                {/* Topbar Simples */}
-                <header className="h-16 bg-white border-b border-gray-200 flex items-center justify-between px-8 sticky top-0 z-10">
-
-                    {/* Barra de Busca (Decorativa por enquanto) */}
-                    <div className="relative w-96">
-                        <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
-                        <input
-                            type="text"
-                            placeholder="Buscar condomínios, moradores..."
-                            className="w-full pl-10 pr-4 py-2 bg-gray-50 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-terracotta-500/20 focus:border-terracotta-500"
-                        />
-                    </div>
-
-                    {/* Área do Usuário */}
-                    <div className="flex items-center gap-6">
-                        <button className="relative text-gray-400 hover:text-terracotta-500 transition-colors">
-                            <Bell className="w-5 h-5" />
-                            <span className="absolute top-0 right-0 w-2 h-2 bg-red-500 rounded-full border-2 border-white"></span>
-                        </button>
-
-                        <div className="flex items-center gap-3 pl-6 border-l border-gray-100">
-                            <div className="text-right hidden md:block">
-                                <p className="text-sm font-semibold text-gunmetal-600">{user?.nome}</p>
-                                <p className="text-xs text-terracotta-500 font-medium uppercase tracking-wider">{user?.tipo}</p>
-                            </div>
-                            <div className="w-10 h-10 rounded-full bg-terracotta-100 flex items-center justify-center text-terracotta-700 font-bold border-2 border-white shadow-sm">
-                                {user?.nome?.charAt(0).toUpperCase()}
-                            </div>
-                        </div>
-                    </div>
-                </header>
-
-                {/* Conteúdo da Página */}
-                <div className="p-8">
+                {/* Área de Conteúdo Injetada (Children) */}
+                {/* Animação suave na troca de páginas */}
+                <div className="flex-1 p-8 xl:p-10 max-w-[1920px] mx-auto w-full animate-in fade-in slide-in-from-bottom-4 duration-700">
                     {children}
                 </div>
+                
+                {/* Footer Minimalista (Fixo no final do conteúdo) */}
+                <footer className="py-6 px-10 text-center text-[10px] text-stone-400 uppercase tracking-widest border-t border-stone-100/50 mt-auto">
+                    SmartCondo System © 2026 • v2.0
+                </footer>
             </main>
         </div>
     );
