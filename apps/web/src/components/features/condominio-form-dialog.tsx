@@ -48,6 +48,7 @@ export function CondominioFormDialog({
     const onSubmit = async (data: CreateCondominioDto) => {
         setIsSubmitting(true);
         setError(null);
+        
         try {
             let result;
             if (condominioToEdit) {
@@ -57,9 +58,23 @@ export function CondominioFormDialog({
             }
             onSuccess(result);
             onClose();
-        } catch (err) {
-            console.error(err);
-            setError('Erro ao salvar. Verifique os dados.');
+        } catch (err: any) {
+            console.error('Erro ao salvar:', err);
+            
+            // Tratamento específico de erros do backend
+            const errorData = err.response?.data;
+            
+            if (errorData?.message) {
+                if (Array.isArray(errorData.message)) {
+                    setError(errorData.message.join(', '));
+                } else {
+                    setError(errorData.message);
+                }
+            } else if (errorData?.error) {
+                setError(errorData.error);
+            } else {
+                setError('Erro ao salvar. Verifique os dados e tente novamente.');
+            }
         } finally {
             setIsSubmitting(false);
         }
@@ -100,7 +115,11 @@ export function CondominioFormDialog({
                     <div className="space-y-1.5">
                         <label className="text-xs font-bold text-stone-500 uppercase tracking-wider ml-1">Nome do Empreendimento</label>
                         <input
-                            {...register('nome', { required: 'O nome é obrigatório' })}
+                            {...register('nome', { 
+                                required: 'O nome é obrigatório',
+                                minLength: { value: 3, message: 'O nome deve ter pelo menos 3 caracteres' },
+                                maxLength: { value: 100, message: 'O nome deve ter no máximo 100 caracteres' }
+                            })}
                             type="text"
                             placeholder="Ex: Residencial Solar das Águas"
                             className="w-full px-4 py-3 bg-stone-50 border border-stone-200 rounded-xl text-espresso-900 placeholder-stone-400 focus:outline-none focus:border-clay-300 focus:ring-4 focus:ring-clay-100/50 transition-all"
@@ -113,12 +132,15 @@ export function CondominioFormDialog({
                         <div className="relative group">
                             <MapPin className="absolute left-4 top-3.5 w-5 h-5 text-stone-400 group-focus-within:text-clay-500 transition-colors" strokeWidth={1.5} />
                             <textarea
-                                {...register('endereco')}
+                                {...register('endereco', {
+                                    maxLength: { value: 255, message: 'O endereço deve ter no máximo 255 caracteres' }
+                                })}
                                 rows={3}
                                 placeholder="Rua, Número, Bairro, Cidade..."
                                 className="w-full pl-12 pr-4 py-3 bg-stone-50 border border-stone-200 rounded-xl text-espresso-900 placeholder-stone-400 focus:outline-none focus:border-clay-300 focus:ring-4 focus:ring-clay-100/50 transition-all resize-none"
                             />
                         </div>
+                        {errors.endereco && <span className="text-xs text-red-500 ml-1">{errors.endereco.message}</span>}
                     </div>
 
                     {error && (

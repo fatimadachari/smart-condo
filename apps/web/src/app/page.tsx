@@ -16,11 +16,33 @@ export default function LoginPage() {
   const onSubmit = async (data: LoginCredentials) => {
     setIsLoading(true);
     setError('');
+    
     try {
+      console.log('🔐 Tentando login...');
       const response = await authService.login(data);
+      
+      console.log('✅ Login bem-sucedido, resposta:', response);
+      console.log('🎟️ Token recebido:', response.access_token);
+      
+      // Salvar token
       authService.saveToken(response.access_token);
+      
+      // Verificar se foi salvo
+      const tokenSalvo = localStorage.getItem('smartcondo_token');
+      console.log('💾 Token salvo no localStorage:', tokenSalvo ? 'SIM ✅' : 'NÃO ❌');
+      
+      if (!tokenSalvo) {
+        throw new Error('Falha ao salvar token no localStorage');
+      }
+      
+      // Aguardar um pouco para garantir que o localStorage foi atualizado
+      await new Promise(resolve => setTimeout(resolve, 100));
+      
+      console.log('🚀 Redirecionando para dashboard...');
       router.push('/dashboard');
-    } catch (err) {
+      
+    } catch (err: any) {
+      console.error('❌ Erro no login:', err);
       setError('Acesso não autorizado. Verifique suas credenciais.');
     } finally {
       setIsLoading(false);
@@ -32,10 +54,7 @@ export default function LoginPage() {
       
       {/* COLUNA ESQUERDA - AMBIENTAÇÃO */}
       <div className="hidden lg:flex w-1/2 relative overflow-hidden bg-espresso-900">
-        {/* Imagem de Fundo (Placeholder para imagem de arquitetura real) */}
         <div className="absolute inset-0 bg-[url('https://images.unsplash.com/photo-1600607687939-ce8a6c25118c?q=80&w=2653&auto=format&fit=crop')] bg-cover bg-center opacity-60 mix-blend-overlay grayscale-[20%]" />
-        
-        {/* Overlay Gradiente Quente */}
         <div className="absolute inset-0 bg-gradient-to-t from-espresso-900 via-espresso-900/60 to-transparent" />
 
         <div className="relative z-10 flex flex-col justify-between p-16 w-full h-full">
@@ -75,7 +94,6 @@ export default function LoginPage() {
           <form onSubmit={handleSubmit(onSubmit)} className="space-y-8">
             
             <div className="space-y-6">
-              {/* Input Email Minimalista */}
               <div className="group">
                 <label className="block text-xs font-bold text-stone-500 uppercase tracking-wider mb-2 ml-1">E-mail Corporativo</label>
                 <div className="relative flex items-center">
@@ -90,7 +108,6 @@ export default function LoginPage() {
                 {errors.email && <span className="text-xs text-red-500 mt-1 ml-1">{errors.email.message}</span>}
               </div>
 
-              {/* Input Senha Minimalista */}
               <div className="group">
                 <div className="flex justify-between items-center mb-2 ml-1">
                   <label className="block text-xs font-bold text-stone-500 uppercase tracking-wider">Senha</label>

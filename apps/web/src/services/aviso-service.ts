@@ -10,8 +10,10 @@ export interface Aviso {
     titulo: string;
     descricao: string;
     tipo: 'GERAL' | 'URGENTE';
-    dataEvento?: string;
     criadoEm: string;
+    dataEvento: string | null;
+    condominioId: string;
+    autorId: string;
 }
 
 export interface CreateAvisoDto {
@@ -19,25 +21,44 @@ export interface CreateAvisoDto {
     descricao: string;
     tipo?: 'GERAL' | 'URGENTE';
     dataEvento?: string;
+    condominioId: string;
+}
+
+export interface UpdateAvisoDto {
+    titulo?: string;
+    descricao?: string;
+    tipo?: 'GERAL' | 'URGENTE';
+    dataEvento?: string;
+}
+
+export interface ApiResponse<T> {
+    success: boolean;
+    data: T;
+    timestamp: string;
 }
 
 export const avisosService = {
-    getAll: async () => {
-        const response = await api.get<Aviso[]>('/avisos');
-        return response.data;
+    getAll: async (): Promise<Aviso[]> => {
+        const response = await api.get<ApiResponse<Aviso[]>>('/avisos');
+        return response.data.data;
     },
 
-    delete: async (id: string) => {
+    getById: async (id: string): Promise<Aviso> => {
+        const response = await api.get<ApiResponse<Aviso>>(`/avisos/${id}`);
+        return response.data.data;
+    },
+
+    create: async (data: CreateAvisoDto): Promise<Aviso> => {
+        const response = await api.post<ApiResponse<Aviso>>('/avisos', data);
+        return response.data.data;
+    },
+
+    update: async (id: string, data: UpdateAvisoDto): Promise<Aviso> => {
+        const response = await api.patch<ApiResponse<Aviso>>(`/avisos/${id}`, data);
+        return response.data.data;
+    },
+
+    delete: async (id: string): Promise<void> => {
         await api.delete(`/avisos/${id}`);
-    },
-
-    create: async (data: CreateAvisoDto) => {
-        const response = await api.post<Aviso>('/avisos', data);
-        return response.data;
-    },
-
-    update: async (id: string, data: CreateAvisoDto) => {
-        const response = await api.patch<Aviso>(`/avisos/${id}`, data);
-        return response.data;
     }
 };

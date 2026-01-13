@@ -18,9 +18,12 @@ import { unidadeService } from '@/services/unidade-service';
 import { usuarioService } from '@/services/usuario-service';
 import { avisosService } from '@/services/aviso-service';
 import { bookingService } from '@/services/booking-service';
+import { useToast } from '@/components/ui/toast';
 
 export default function DashboardPage() {
     const { user } = useAuth();
+    const { error: showError } = useToast();
+    
     const [stats, setStats] = useState({
         condominios: 0,
         unidades: 0,
@@ -33,8 +36,8 @@ export default function DashboardPage() {
     useEffect(() => {
         async function loadStats() {
             try {
-                const [condos, units, users, avisosData, bookingsData] = await Promise.all([
-                    condominioService.getAll(),
+                const [condosResponse, units, users, avisosData, bookingsData] = await Promise.all([
+                    condominioService.getAll({ page: 1, perPage: 100 }), // Reduzido de 1000 para 100
                     unidadeService.getAll(),
                     usuarioService.getAll(),
                     avisosService.getAll(),
@@ -42,22 +45,25 @@ export default function DashboardPage() {
                 ]);
 
                 setStats({
-                    condominios: condos.length,
+                    condominios: condosResponse.meta.total,
                     unidades: units.length,
                     usuarios: users.length,
                     avisos: avisosData.length,
                     reservas: bookingsData.length
                 });
-            } catch (error) {
-                console.error('Erro ao carregar estatísticas', error);
+            } catch (error: any) {
+                console.error('Erro ao carregar estatísticas:', error);
+                showError(
+                    'Erro ao carregar dashboard', 
+                    error.response?.data?.message || 'Não foi possível carregar as estatísticas'
+                );
             } finally {
                 setLoading(false);
             }
         }
         loadStats();
-    }, []);
+    }, [showError]);
 
-    // Card Minimalista de Luxo
     const StatCard = ({ title, value, icon: Icon, delay }: any) => (
         <div 
             className="group bg-white p-8 rounded-2xl border border-stone-100 shadow-sm hover:shadow-soft transition-all duration-500 ease-out"
@@ -81,7 +87,6 @@ export default function DashboardPage() {
     return (
         <div className="space-y-10">
 
-            {/* Cabeçalho Elegante */}
             <div className="flex flex-col md:flex-row md:items-end justify-between gap-4 pb-4 border-b border-stone-200">
                 <div>
                     <h1 className="text-3xl font-light text-espresso-900">
@@ -96,7 +101,6 @@ export default function DashboardPage() {
                 </div>
             </div>
 
-            {/* Grid de Estatísticas Minimalistas */}
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 gap-6">
                 <StatCard title="Reservas" value={stats.reservas} icon={CalendarCheck} delay="0ms" />
                 <StatCard title="Avisos" value={stats.avisos} icon={Megaphone} delay="100ms" />
@@ -105,12 +109,9 @@ export default function DashboardPage() {
                 <StatCard title="Usuários" value={stats.usuarios} icon={Users} delay="400ms" />
             </div>
 
-            {/* Seção Inferior: Ações e Gráficos */}
             <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
 
-                {/* Card Escuro de Ações (Contraste Premium) */}
                 <div className="lg:col-span-1 bg-espresso-900 rounded-2xl p-8 text-white relative overflow-hidden shadow-2xl">
-                    {/* Elementos decorativos sutis */}
                     <div className="absolute top-0 right-0 w-64 h-64 bg-gradient-to-br from-white/5 to-transparent rounded-full -mr-16 -mt-16 pointer-events-none" />
                     
                     <div className="relative z-10">
@@ -147,7 +148,6 @@ export default function DashboardPage() {
                     </div>
                 </div>
 
-                {/* Área Principal Branca (Placeholder para gráfico ou lista) */}
                 <div className="lg:col-span-2 bg-white rounded-2xl border border-stone-100 p-8 shadow-sm flex flex-col">
                     <div className="flex justify-between items-center mb-8">
                         <div>

@@ -1,32 +1,52 @@
 import axios from 'axios';
 
-const api = axios.create({
-    baseURL: 'http://localhost:3000', // URL da sua API NestJS
+export const api = axios.create({
+    baseURL: process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3000',
+    headers: {
+        'Content-Type': 'application/json',
+    },
 });
 
-// Interceptor de Requisição: Antes de sair, coloca o crachá (Token)
-api.interceptors.request.use((config) => {
-    const token = typeof window !== 'undefined' ? localStorage.getItem('smartcondo_token') : null;
+// Interceptor de Requisição
+api.interceptors.request.use(
+    (config) => {
+        const token = typeof window !== 'undefined' ? localStorage.getItem('smartcondo_token') : null;
 
-    if (token) {
-        config.headers.Authorization = `Bearer ${token}`;
-    }
+        console.log('🔑 Token encontrado:', token ? 'SIM ✅' : 'NÃO ❌');
+        console.log('📍 Requisição para:', config.url);
 
-    return config;
-});
-
-// Interceptor de Resposta: Se der erro 401, chuta pra fora
-api.interceptors.response.use(
-    (response) => response,
-    (error) => {
-        if (error.response?.status === 401) {
-            if (typeof window !== 'undefined') {
-                localStorage.removeItem('smartcondo_token');
-                window.location.href = '/';
-            }
+        if (token) {
+            config.headers.Authorization = `Bearer ${token}`;
+            console.log('✅ Token adicionado no header');
+        } else {
+            console.log('❌ Nenhum token para adicionar');
         }
+
+        return config;
+    },
+    (error) => {
         return Promise.reject(error);
     }
 );
 
-export { api };
+// Interceptor de Resposta
+api.interceptors.response.use(
+    (response) => response,
+    (error) => {
+        console.log('❌ Erro na resposta:', error.response?.status, error.response?.data);
+        
+        if (error.response?.status === 401) {
+            console.log('🚪 401 detectado - Removendo token e redirecionando');
+            if (typeof window !== 'undefined') {
+                localStorage.removeItem('smartcondo_token');
+                
+                // Só redireciona se não estiver já na página de login
+                if (!window.location.pathname.includes('/login') && window.location.pathname !== '/') {
+                    window.location.href = '/';
+                }
+            }
+        }
+        
+        return Promise.reject(error);
+    }
+);
