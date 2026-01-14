@@ -1,69 +1,77 @@
-import { Injectable, NotFoundException } from '@nestjs/common';
-import { CreateAvisoDto } from './dto/create-aviso.dto';
+import { Injectable, NotFoundException, InternalServerErrorException } from '@nestjs/common';
 import { prisma } from '@smart-condo/database';
+import { CreateAvisoDto, TipoAviso } from './dto/create-aviso.dto'; // Importe o Enum aqui!
+import { UpdateAvisoDto } from './dto/update-aviso.dto';
+import { AvisoResponseDto } from './dto/aviso-response.dto';
 
 @Injectable()
 export class AvisosService {
 
-  async create(createAvisoDto: CreateAvisoDto, autorId: string, condominioId: string) {
-    return prisma.aviso.create({
-      data: {
-        titulo: createAvisoDto.titulo,
-        descricao: createAvisoDto.descricao,
-        
-        // CORREÇÃO 1: Usar o tipo que vem do front (ou GERAL se vier vazio)
-        tipo: createAvisoDto.tipo || 'GERAL', 
-        
-        // CORREÇÃO 2: Salvar a Data do Evento (se existir)
-        dataEvento: createAvisoDto.dataEvento ? new Date(createAvisoDto.dataEvento) : null,
-
-        // Relacionamentos Obrigatórios
-        autorId: autorId,
-        condominioId: condominioId
-      },
-      include: {
-        autor: { select: { nome: true, tipo: true } },
-      }
-    });
+  private mapToDto(aviso: any): AvisoResponseDto {
+    return {
+      ...aviso,
+      tipo: aviso.tipo as TipoAviso, 
+    };
   }
 
-  async findAll(condominioId?: string) {
-    const where = condominioId ? { condominioId } : {};
+  async create(data: CreateAvisoDto, autorId: string, condominioId: string): Promise<AvisoResponseDto> {
+    try {
+      const aviso = await prisma.aviso.create({
+        data: {
+          titulo: data.titulo,
+          descricao: data.descricao,
+          tipo: data.tipo || TipoAviso.GERAL,
+          dataEvento: data.dataEvento ? new Date(data.dataEvento) : null,
+          autorId,
+          condominioId
+        },
+      });
+      
+      return this.mapToDto(aviso); 
+    } catch (error) {
+      throw new InternalServerErrorException('Erro ao criar aviso.');
+    }
+  }
 
-    return prisma.aviso.findMany({
+  async findAll(condominioId?: string): Promise<AvisoResponseDto[]> {
+    const where = condominioId ? { condominioId } : {};
+    const avisos = await prisma.aviso.findMany({
       where,
       orderBy: { criadoEm: 'desc' },
-      include: {
-        autor: { select: { nome: true, tipo: true } },
-      }
     });
+    
+    return avisos.map(aviso => this.mapToDto(aviso)); 
   }
 
-  async findOne(id: string) {
-    const aviso = await prisma.aviso.findUnique({
-      where: { id },
-      include: {
-        autor: { select: { nome: true } }
-      }
-    });
+  async findOne(id: string): Promise<AvisoResponseDto> {
+    const aviso = await prisma.aviso.findUnique({ where: { id } });
     if (!aviso) throw new NotFoundException('Aviso não encontrado');
-    return aviso;
+    
+    return this.mapToDto(aviso); 
   }
 
-  async update(id: string, data: CreateAvisoDto) {
-    return prisma.aviso.update({
-      where: { id },
-      data: {
-        titulo: data.titulo,
-        descricao: data.descricao,
-        tipo: data.tipo,
-        // Conversão de String (DTO) para Date (Banco)
-        dataEvento: data.dataEvento ? new Date(data.dataEvento) : null,
-      }
-    });
+  async update(id: string, data: UpdateAvisoDto): Promise<AvisoResponseDto> {
+    await this.findOne(id);
+
+    const dataToUpdate: any = { ...data };
+    if (data.dataEvento) {
+        dataToUpdate.dataEvento = new Date(data.dataEvento);
+    }
+
+    try {
+      const aviso = await prisma.aviso.update({
+        where: { id },
+        data: dataToUpdate,
+      });
+      
+      return this.mapToDto(aviso); 
+    } catch (error) {
+        throw new InternalServerErrorException('Erro ao atualizar aviso.');
+    }
   }
 
-  async remove(id: string) {
-    return prisma.aviso.delete({ where: { id } });
+  async remove(id: string): Promise<void> {
+    await this.findOne(id);
+    await prisma.aviso.delete({ where: { id } });
   }
 }

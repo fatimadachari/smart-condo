@@ -1,75 +1,81 @@
-import { Injectable, ConflictException, NotFoundException, InternalServerErrorException } from '@nestjs/common';
+import { Injectable, ConflictException, NotFoundException, InternalServerErrorException, BadRequestException } from '@nestjs/common';
 import * as bcrypt from 'bcrypt';
 import { prisma } from '@smart-condo/database';
 import { CreateUserDto } from './dto/create-user.dto';
 import { UpdateUserDto } from './dto/update-user.dto';
+import { UserResponseDto } from './dto/user-response.dto';
 
 @Injectable()
 export class UsersService {
   
-  private mapToFrontend(user: any) {
-    const { senha, ...rest } = user;
+  private mapToDto(user: any): UserResponseDto {
     return {
-      ...rest,
+      id: user.id,
       name: user.nome,
+      email: user.email,
       role: user.tipo,
+      condominioId: user.condominioId,
+      unidadeId: user.unidadeId,
+      criadoEm: user.criadoEm,
     };
   }
 
-  async create(data: CreateUserDto) {
-    const userExists = await prisma.user.findUnique({
-      where: { email: data.email },
-    });
-
-    if (userExists) {
-      throw new ConflictException('Este e-mail já está cadastrado.');
+  async create(data: CreateUserDto): Promise<UserResponseDto> {
+    if (!data.condominioId) {
+        throw new BadRequestException('O ID do condomínio é obrigatório para cadastro.');
     }
 
     const hashedPassword = await bcrypt.hash(data.password, 10);
 
-    // SOLUÇÃO: Montamos o objeto manualmente para evitar o erro de tipo
-    // Usamos 'any' aqui pontualmente ou construímos condicionalmente
-    const payload: any = {
-        nome: data.name,
-        email: data.email,
-        senha: hashedPassword,
-        tipo: data.role,
-    };
-
-    // Só adicionamos o ID se ele realmente existir (evita passar undefined)
-    if (data.condominioId) {
-        payload.condominioId = data.condominioId;
-    }
-    
-    // Se tiver unidade no futuro:
-    // if (data.unidadeId) payload.unidadeId = data.unidadeId;
-
     try {
       const user = await prisma.user.create({
-        data: payload, // Agora o TS aceita
+        data: {
+          nome: data.name,
+          email: data.email,
+          senha: hashedPassword,
+          tipo: data.role,
+          condominioId: data.condominioId!, 
+          unidadeId: data.unidadeId, 
+        },
       });
 
-      return this.mapToFrontend(user);
-
+      return this.mapToDto(user);
     } catch (error) {
-      console.error(error);
+      if (error.code === 'P2002') {
+        throw new ConflictException('Este e-mail já está cadastrado.');
+      }
+      console.error(error); 
       throw new InternalServerErrorException('Erro ao criar usuário.');
     }
   }
 
-  // ... findAll, findOne, remove (mantêm iguais) ...
+  async findAll(): Promise<UserResponseDto[]> {
+    const users = await prisma.user.findMany({
+      orderBy: { nome: 'asc' },
+    });
+    return users.map(user => this.mapToDto(user));
+  }
 
-  async update(id: string, data: UpdateUserDto) {
+  async findOne(id: string): Promise<UserResponseDto> {
+    const user = await prisma.user.findUnique({ where: { id } });
+
+    if (!user) {
+      throw new NotFoundException('Usuário não encontrado.');
+    }
+
+    return this.mapToDto(user);
+  }
+
+  async update(id: string, data: UpdateUserDto): Promise<UserResponseDto> {
     await this.findOne(id);
 
-    const dataToUpdate: any = { 
-        email: data.email,
-        // condominioId: data.condominioId // Se deixar aqui direto pode dar erro se for undefined
-    };
-
-    if (data.condominioId) dataToUpdate.condominioId = data.condominioId;
+    const dataToUpdate: any = {};
     if (data.name) dataToUpdate.nome = data.name;
+    if (data.email) dataToUpdate.email = data.email;
     if (data.role) dataToUpdate.tipo = data.role;
+    if (data.condominioId) dataToUpdate.condominioId = data.condominioId;
+    if (data.unidadeId) dataToUpdate.unidadeId = data.unidadeId;
+    
     if (data.password) {
       dataToUpdate.senha = await bcrypt.hash(data.password, 10);
     }
@@ -79,36 +85,21 @@ export class UsersService {
         where: { id },
         data: dataToUpdate,
       });
-      return this.mapToFrontend(user);
+      return this.mapToDto(user);
     } catch (error) {
+      if (error.code === 'P2002') {
+        throw new ConflictException('E-mail já está em uso.');
+      }
       throw new InternalServerErrorException('Erro ao atualizar usuário.');
     }
   }
-  
-  // Mantenha os outros métodos...
-  async findAll() {
-    const users = await prisma.user.findMany({
-      orderBy: { nome: 'asc' }, 
-      include: {
-        condominio: { select: { nome: true } },
-      }
-    });
-    return users.map(user => this.mapToFrontend(user));
-  }
 
-  async findOne(id: string) {
-    const user = await prisma.user.findUnique({
-      where: { id },
-      include: {
-        condominio: true,
-      }
-    });
-    if (!user) throw new NotFoundException('Usuário não encontrado.');
-    return this.mapToFrontend(user);
-  }
-
-  async remove(id: string) {
+  async remove(id: string): Promise<void> {
     await this.findOne(id);
-    return await prisma.user.delete({ where: { id } });
+    try {
+        await prisma.user.delete({ where: { id } });
+    } catch (error) {
+        throw new InternalServerErrorException('Erro ao remover usuário.');
+    }
   }
 }

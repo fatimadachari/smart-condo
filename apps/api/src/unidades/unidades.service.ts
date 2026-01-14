@@ -1,20 +1,23 @@
 import { Injectable, ConflictException, InternalServerErrorException, NotFoundException } from '@nestjs/common';
+import { prisma } from '@smart-condo/database';
 import { CreateUnidadeDto } from './dto/create-unidade.dto';
 import { UpdateUnidadeDto } from './dto/update-unidade.dto';
-import { prisma } from '@smart-condo/database';
+import { UnidadeResponseDto } from './dto/unidade-response.dto';
 
 @Injectable()
 export class UnidadesService {
 
-  // Função auxiliar para adaptar o retorno do Banco (numero) para o Front (identificacao)
-  private mapToFrontend(unidade: any) {
+  private mapToDto(unidade: any): UnidadeResponseDto {
     return {
-      ...unidade,
-      identificacao: unidade.numero, // O front espera 'identificacao'
+      id: unidade.id,
+      identificacao: unidade.numero, 
+      bloco: unidade.bloco,
+      condominioId: unidade.condominioId,
+      criadoEm: unidade.criadoEm,
     };
   }
 
-  async create(data: CreateUnidadeDto) {
+  async create(data: CreateUnidadeDto): Promise<UnidadeResponseDto> {
     const condominioExists = await prisma.condominio.findUnique({
       where: { id: data.condominioId }
     });
@@ -24,20 +27,15 @@ export class UnidadesService {
     }
 
     try {
-      // AQUI ESTÁ A CORREÇÃO: Mapeamos manualmete data.identificacao -> numero
-      const created = await prisma.unidade.create({
+      const unidade = await prisma.unidade.create({
         data: {
-          numero: data.identificacao, // <--- TRADUÇÃO AQUI
+          numero: data.identificacao,
           bloco: data.bloco,
           condominioId: data.condominioId,
         },
-        include: {
-          condominio: true,
-        },
       });
 
-      return this.mapToFrontend(created);
-
+      return this.mapToDto(unidade);
     } catch (error) {
       if (error.code === 'P2002') {
         throw new ConflictException('Já existe uma unidade com esta identificação neste condomínio.');
@@ -46,74 +44,51 @@ export class UnidadesService {
     }
   }
 
-  async findAll() {
+  async findAll(): Promise<UnidadeResponseDto[]> {
     const unidades = await prisma.unidade.findMany({
-      include: {
-        condominio: true,
-      },
-      orderBy: {
-        numero: 'asc', // <--- CORREÇÃO DO ERRO DE ORDENAÇÃO (Usar 'numero')
-      },
+      orderBy: { numero: 'asc' },
     });
-
-    // Mapeia a lista inteira para o formato que o front espera
-    return unidades.map(u => this.mapToFrontend(u));
+    return unidades.map(u => this.mapToDto(u));
   }
 
-  async findOne(id: string) {
-    const unidade = await prisma.unidade.findUnique({
-      where: { id },
-      include: {
-        condominio: true,
-      },
-    });
+  async findOne(id: string): Promise<UnidadeResponseDto> {
+    const unidade = await prisma.unidade.findUnique({ where: { id } });
 
     if (!unidade) {
       throw new NotFoundException(`Unidade com ID ${id} não encontrada.`);
     }
 
-    return this.mapToFrontend(unidade);
+    return this.mapToDto(unidade);
   }
 
-  async update(id: string, data: UpdateUnidadeDto) {
-    // Verifica se existe
+  async update(id: string, data: UpdateUnidadeDto): Promise<UnidadeResponseDto> {
     await this.findOne(id);
 
+    const dataToUpdate: any = {
+      bloco: data.bloco,
+      condominioId: data.condominioId
+    };
+
+    if (data.identificacao) {
+      dataToUpdate.numero = data.identificacao;
+    }
+
     try {
-      // Prepara o objeto de atualização
-      const dataToUpdate: any = {
-        bloco: data.bloco,
-        condominioId: data.condominioId
-      };
-
-      // Só atualiza o numero se vier a identificacao
-      if (data.identificacao) {
-        dataToUpdate.numero = data.identificacao;
-      }
-
       const updated = await prisma.unidade.update({
         where: { id },
         data: dataToUpdate,
-        include: {
-          condominio: true,
-        },
       });
-
-      return this.mapToFrontend(updated);
-
+      return this.mapToDto(updated);
     } catch (error) {
       if (error.code === 'P2002') {
-        throw new ConflictException('Já existe uma unidade com esta identificação neste condomínio.');
+        throw new ConflictException('Já existe uma unidade com esta identificação.');
       }
       throw new InternalServerErrorException('Erro ao atualizar unidade.');
     }
   }
 
-  async remove(id: string) {
-    await this.findOne(id); 
-
-    return await prisma.unidade.delete({
-      where: { id },
-    });
+  async remove(id: string): Promise<void> {
+    await this.findOne(id);
+    await prisma.unidade.delete({ where: { id } });
   }
 }
