@@ -38,13 +38,10 @@ describe('AvisosController', () => {
     });
 
     it('deve lançar erro se usuário não tiver condomínio', async () => {
-      const req = { user: { id: 'admin_global' } }; // Sem condominioId
+      const req = { user: { id: 'admin_global' } };
 
-      // SOLUÇÃO: Usamos try/catch explícito para garantir que pegamos o erro
-      // independente se ele foi lançado de forma síncrona ou assíncrona.
       try {
         await controller.create({} as any, req);
-        // Se não lançar erro, forçamos falha no teste
         fail('Deveria ter lançado BadRequestException');
       } catch (error) {
         expect(error).toBeInstanceOf(BadRequestException);

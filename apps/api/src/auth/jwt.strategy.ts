@@ -3,7 +3,6 @@ import { PassportStrategy } from '@nestjs/passport';
 import { Injectable } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 
-// 1. Interface para definir o que esperamos receber DENTRO do token
 export interface JwtPayload {
   sub: string;
   email: string;
@@ -12,12 +11,11 @@ export interface JwtPayload {
   condominioId?: string;
 }
 
-// 2. Interface para definir o que estará disponível em 'req.user' nos Controllers
 export interface UserFromJwt {
   id: string;
   email: string;
-  name: string; // Padronizamos para inglês aqui
-  role: string; // Padronizamos para inglês aqui
+  name: string; 
+  role: string; 
   condominioId?: string;
 }
 
@@ -32,12 +30,11 @@ export class JwtStrategy extends PassportStrategy(Strategy) {
   }
 
   async validate(payload: JwtPayload): Promise<UserFromJwt> {
-    // O retorno deste método é o que o Nest injeta em `req.user`
     return {
-      id: payload.sub,          // Mapeamos 'sub' para 'id' (mais fácil de usar)
+      id: payload.sub,          
       email: payload.email,
-      name: payload.nome,       // Traduzimos 'nome' (banco) para 'name' (padrão projeto)
-      role: payload.tipo,       // Traduzimos 'tipo' (banco) para 'role' (padrão projeto)
+      name: payload.nome,       
+      role: payload.tipo,       
       condominioId: payload.condominioId
     };
   }

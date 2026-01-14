@@ -1,7 +1,7 @@
 import { Injectable, ConflictException, InternalServerErrorException, NotFoundException, BadRequestException } from '@nestjs/common';
 import { prisma } from '@smart-condo/database';
 import { CreateBookingDto } from './dto/create-booking.dto';
-import { UpdateBookingDto, BookingStatus } from './dto/update-booking.dto'; // Enum do DTO
+import { UpdateBookingDto, BookingStatus } from './dto/update-booking.dto'; 
 import { BookingResponseDto } from './dto/booking-response.dto';
 
 @Injectable()

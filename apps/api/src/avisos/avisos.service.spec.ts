@@ -4,7 +4,6 @@ import { AvisosService } from './avisos.service';
 import { prisma } from '@smart-condo/database';
 import { TipoAviso } from './dto/create-aviso.dto';
 
-// Mock do Prisma
 jest.mock('@smart-condo/database', () => ({
   prisma: {
     aviso: {
@@ -35,17 +34,16 @@ describe('AvisosService', () => {
         titulo: 'Elevador Quebrado',
         descricao: 'Manutenção dia 20',
         tipo: TipoAviso.URGENTE,
-        dataEvento: '2026-02-20T10:00:00Z', // String ISO vem do Front
+        dataEvento: '2026-02-20T10:00:00Z', 
       };
       const autorId = 'user-123';
       const condominioId = 'cond-123';
 
-      // Mock do retorno do Banco (O banco retorna datas como Objeto Date e Enums como String)
       const mockDbResult = {
         id: 'aviso-1',
         titulo: createDto.titulo,
         descricao: createDto.descricao,
-        tipo: 'URGENTE', // Banco devolve string
+        tipo: 'URGENTE', 
         dataEvento: new Date(createDto.dataEvento),
         autorId,
         condominioId,
@@ -56,22 +54,20 @@ describe('AvisosService', () => {
 
       const result = await service.create(createDto, autorId, condominioId);
 
-      // 1. Verifica se chamou o Prisma com os dados convertidos
       expect(prisma.aviso.create).toHaveBeenCalledWith(expect.objectContaining({
         data: expect.objectContaining({
           autorId,
           condominioId,
           tipo: TipoAviso.URGENTE,
-          dataEvento: expect.any(Date), // Garante que converteu string para Date
+          dataEvento: expect.any(Date), 
         }),
       }));
 
-      // 2. Verifica se o retorno foi mapeado corretamente (String -> Enum)
       expect(result.tipo).toBe(TipoAviso.URGENTE);
     });
 
     it('deve usar tipo GERAL se não for informado', async () => {
-      const createDto = { titulo: 'Teste', descricao: 'Desc' }; // Sem tipo
+      const createDto = { titulo: 'Teste', descricao: 'Desc' }; 
       const autorId = 'u1';
       const condId = 'c1';
 
@@ -85,7 +81,7 @@ describe('AvisosService', () => {
 
       expect(prisma.aviso.create).toHaveBeenCalledWith(expect.objectContaining({
         data: expect.objectContaining({
-          tipo: TipoAviso.GERAL, // Default aplicado
+          tipo: TipoAviso.GERAL, 
         }),
       }));
     });
@@ -108,7 +104,7 @@ describe('AvisosService', () => {
 
       expect(result).toHaveLength(1);
       expect(prisma.aviso.findMany).toHaveBeenCalledWith(expect.objectContaining({
-        where: {}, // Sem filtro
+        where: {}, 
       }));
     });
 
@@ -140,7 +136,6 @@ describe('AvisosService', () => {
 
   describe('update', () => {
     it('deve atualizar o aviso', async () => {
-      // Setup: Aviso existe
       (prisma.aviso.findUnique as jest.Mock).mockResolvedValue({ id: '1', tipo: 'GERAL' });
       
       const updateData = { titulo: 'Novo Título' };

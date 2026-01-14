@@ -5,6 +5,6 @@ import { UsersController } from './users.controller';
 @Module({
   controllers: [UsersController],
   providers: [UsersService],
-  exports: [UsersService], // Exportamos caso o AuthModule precise buscar usuário por email
+  exports: [UsersService], 
 })
 export class UsersModule {}

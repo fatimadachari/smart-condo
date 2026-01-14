@@ -10,7 +10,6 @@ export class AuthService {
   constructor(private jwtService: JwtService) {}
 
   async login(loginDto: LoginDto): Promise<LoginResponseDto> {
-    // Busca bruta para pegar a senha
     const user = await prisma.user.findUnique({ 
         where: { email: loginDto.email } 
     });
@@ -41,7 +40,7 @@ export class AuthService {
           id: user.id,
           name: user.nome,
           email: user.email,
-          role: user.tipo as any, // Cast para o Enum do DTO
+          role: user.tipo as any, 
           condominioId: user.condominioId,
           unidadeId: user.unidadeId,
           criadoEm: user.criadoEm

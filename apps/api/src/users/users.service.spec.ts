@@ -44,7 +44,6 @@ describe('UsersService', () => {
 
       (bcrypt.hash as jest.Mock).mockResolvedValue('hash_senha');
       
-      // O Prisma retorna nomes em PT (banco)
       const mockUserDb = {
         id: '1',
         nome: 'Ana',
@@ -63,12 +62,11 @@ describe('UsersService', () => {
         data: expect.objectContaining({ senha: 'hash_senha', condominioId: 'cond1' }),
       }));
 
-      // Verifica se o retorno seguiu o UserResponseDto (EN)
       expect(result).toEqual(expect.objectContaining({
-        name: 'Ana', // Veio de 'nome'
-        role: 'MORADOR', // Veio de 'tipo'
+        name: 'Ana', 
+        role: 'MORADOR', 
       }));
-      expect(result).not.toHaveProperty('password'); // Não pode ter senha
+      expect(result).not.toHaveProperty('password'); 
     });
   });
 });

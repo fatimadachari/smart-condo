@@ -5,7 +5,6 @@ import { AuthService } from './auth.service';
 import { prisma } from '@smart-condo/database';
 import * as bcrypt from 'bcrypt';
 
-// Mock do Banco e Bcrypt
 jest.mock('@smart-condo/database', () => ({
   prisma: {
     user: {
@@ -63,7 +62,7 @@ describe('AuthService', () => {
         accessToken: 'token_jwt_valido',
         user: expect.objectContaining({
           email: 'teste@email.com',
-          name: 'Teste', // Verifica se mapeou 'nome' -> 'name'
+          name: 'Teste', 
         }),
       });
     });
@@ -72,7 +71,7 @@ describe('AuthService', () => {
       const mockUser = { id: '1', email: 'teste@email.com', senha: 'hash' };
       
       (prisma.user.findUnique as jest.Mock).mockResolvedValue(mockUser);
-      (bcrypt.compare as jest.Mock).mockResolvedValue(false); // Senha errada
+      (bcrypt.compare as jest.Mock).mockResolvedValue(false); 
 
       await expect(service.login({ email: 't', senha: 'e' })).rejects.toThrow(UnauthorizedException);
     });

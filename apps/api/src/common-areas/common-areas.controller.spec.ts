@@ -8,7 +8,6 @@ describe('CommonAreasController', () => {
   let controller: CommonAreasController;
   let service: CommonAreasService;
 
-  // Mock do Service (isolando a camada de banco de dados)
   const mockService = {
     create: jest.fn(),
     findAll: jest.fn(),
@@ -38,7 +37,6 @@ describe('CommonAreasController', () => {
     controller = module.get<CommonAreasController>(CommonAreasController);
     service = module.get<CommonAreasService>(CommonAreasService);
     
-    // Limpa os mocks antes de cada teste
     jest.clearAllMocks();
   });
 
@@ -92,7 +90,6 @@ describe('CommonAreasController', () => {
     it('deve chamar service.remove com force=true quando query param for "true"', async () => {
       mockService.remove.mockResolvedValue(undefined);
       
-      // O controller recebe 'true' como string vinda da URL
       await controller.remove('1', 'true');
       
       expect(service.remove).toHaveBeenCalledWith('1', true);

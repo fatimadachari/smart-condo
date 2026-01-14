@@ -9,7 +9,7 @@ jest.mock('@smart-condo/database', () => ({
       create: jest.fn(),
       findMany: jest.fn(),
       findUnique: jest.fn(),
-      findFirst: jest.fn(), // Essencial para checar conflitos
+      findFirst: jest.fn(), 
       update: jest.fn(),
       delete: jest.fn(),
     },
@@ -40,13 +40,10 @@ describe('BookingsService', () => {
     };
 
     it('deve criar reserva se não houver conflito', async () => {
-      // 1. Mock Área Comum existe
       (prisma.commonArea.findUnique as jest.Mock).mockResolvedValue({ id: 'area1', isActive: true });
       
-      // 2. Mock SEM Conflito (retorna null)
       (prisma.booking.findFirst as jest.Mock).mockResolvedValue(null);
 
-      // 3. Mock Create
       const mockBooking = { ...createDto, id: '1', status: 'PENDING', createdAt: new Date() };
       (prisma.booking.create as jest.Mock).mockResolvedValue(mockBooking);
 
@@ -57,7 +54,6 @@ describe('BookingsService', () => {
     it('deve lançar ConflictException se houver choque de horário', async () => {
       (prisma.commonArea.findUnique as jest.Mock).mockResolvedValue({ id: 'area1', isActive: true });
       
-      // Mock COM Conflito (retorna uma reserva existente)
       (prisma.booking.findFirst as jest.Mock).mockResolvedValue({ id: 'reserva_existente' });
 
       await expect(service.create(createDto)).rejects.toThrow(ConflictException);

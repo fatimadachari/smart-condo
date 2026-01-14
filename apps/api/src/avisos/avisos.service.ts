@@ -1,6 +1,6 @@
 import { Injectable, NotFoundException, InternalServerErrorException } from '@nestjs/common';
 import { prisma } from '@smart-condo/database';
-import { CreateAvisoDto, TipoAviso } from './dto/create-aviso.dto'; // Importe o Enum aqui!
+import { CreateAvisoDto, TipoAviso } from './dto/create-aviso.dto'; 
 import { UpdateAvisoDto } from './dto/update-aviso.dto';
 import { AvisoResponseDto } from './dto/aviso-response.dto';
 

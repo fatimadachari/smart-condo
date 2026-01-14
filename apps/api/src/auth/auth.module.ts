@@ -8,13 +8,13 @@ import { JwtStrategy } from './jwt.strategy';
 
 @Module({
   imports: [
-    UsersModule, // Permite usar o UsersService aqui dentro
+    UsersModule, 
     JwtModule.registerAsync({
       imports: [ConfigModule],
       inject: [ConfigService],
       useFactory: async (configService: ConfigService) => ({
-        secret: configService.get<string>('JWT_SECRET') || 'MINHA_CHAVE_SECRETA_MUITO_FORTE', // Em prod, isso vem do .env
-        signOptions: { expiresIn: '1d' }, // O token expira em 1 dia
+        secret: configService.get<string>('JWT_SECRET') || 'MINHA_CHAVE_SECRETA_MUITO_FORTE', 
+        signOptions: { expiresIn: '1d' }, 
       }),
     }),
   ],

@@ -35,8 +35,6 @@ describe('CommonAreasService', () => {
 
     service = module.get<CommonAreasService>(CommonAreasService);
     
-    // CORREÇÃO ESSENCIAL: resetAllMocks remove as implementações (mockResolvedValue/RejectedValue)
-    // impedindo que o erro configurado em um teste quebre o próximo.
     jest.resetAllMocks(); 
   });
 
@@ -82,7 +80,6 @@ describe('CommonAreasService', () => {
     it('deve usar transaction para excluir em cascata se force=true', async () => {
       (prisma.commonArea.findUnique as jest.Mock).mockResolvedValue(mockArea);
       
-      // Garante que delete e deleteMany resolvam com sucesso (limpando qualquer erro residual)
       (prisma.commonArea.delete as jest.Mock).mockResolvedValue(mockArea);
       (prisma.booking.deleteMany as jest.Mock).mockResolvedValue({ count: 5 });
 

@@ -9,7 +9,6 @@ describe('UsersController', () => {
   let controller: UsersController;
   let service: UsersService;
 
-  // Mock do Service para não bater no banco de dados
   const mockUsersService = {
     create: jest.fn(),
     findAll: jest.fn(),
@@ -18,7 +17,6 @@ describe('UsersController', () => {
     remove: jest.fn(),
   };
 
-  // Dados de exemplo para usar nos testes
   const mockUserResponse: UserResponseDto = {
     id: 'user-uuid-123',
     name: 'Ana Teste',

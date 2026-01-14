@@ -2,23 +2,24 @@
 @tailwind components;
 @tailwind utilities;
 
-/* Melhora a renderização da fonte para parecer mais "fina" e elegante */
-body {
-  @apply bg-stone-50 text-stone-800 antialiased;
-  -webkit-font-smoothing: antialiased;
-  -moz-osx-font-smoothing: grayscale;
-}
+@layer base {
+  body {
+    @apply bg-stone-50 text-stone-800 antialiased;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+  }
 
-/* Scrollbar personalizada minimalista */
-::-webkit-scrollbar {
-  width: 6px;
-}
-::-webkit-scrollbar-track {
-  @apply bg-transparent;
-}
-::-webkit-scrollbar-thumb {
-  @apply bg-stone-300 rounded-full;
-}
-::-webkit-scrollbar-thumb:hover {
-  @apply bg-clay-400;
+  /* Scrollbar personalizada */
+  ::-webkit-scrollbar {
+    width: 6px;
+  }
+  ::-webkit-scrollbar-track {
+    @apply bg-transparent;
+  }
+  ::-webkit-scrollbar-thumb {
+    @apply bg-stone-300 rounded-full;
+  }
+  ::-webkit-scrollbar-thumb:hover {
+    @apply bg-clay-400;
+  }
 }

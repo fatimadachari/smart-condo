@@ -5,170 +5,186 @@ import { createPortal } from 'react-dom';
 import { useForm } from 'react-hook-form';
 import { X, Building2, Save, Loader2, MapPin } from 'lucide-react';
 import { condominioService, CreateCondominioDto, Condominio } from '@/services/condominio-service';
+import { AxiosError } from 'axios';
 
 interface CondominioFormDialogProps {
-    isOpen: boolean;
-    onClose: () => void;
-    onSuccess: (condominio: Condominio) => void;
-    condominioToEdit?: Condominio | null;
+  isOpen: boolean;
+  onClose: () => void;
+  onSuccess: (condominio: Condominio) => void;
+  condominioToEdit?: Condominio | null;
+}
+
+interface ApiErrorResponse {
+  message: string | string[];
+  error: string;
+  statusCode: number;
 }
 
 export function CondominioFormDialog({
-    isOpen,
-    onClose,
-    onSuccess,
-    condominioToEdit,
+  isOpen,
+  onClose,
+  onSuccess,
+  condominioToEdit,
 }: CondominioFormDialogProps) {
-    const [mounted, setMounted] = useState(false);
-    const [isSubmitting, setIsSubmitting] = useState(false);
-    const [error, setError] = useState<string | null>(null);
+  const [mounted, setMounted] = useState(false);
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [error, setError] = useState<string | null>(null);
 
-    const { register, handleSubmit, reset, setValue, formState: { errors } } = useForm<CreateCondominioDto>();
+  const { 
+    register, 
+    handleSubmit, 
+    reset, 
+    setValue, 
+    formState: { errors } 
+  } = useForm<CreateCondominioDto>();
 
-    useEffect(() => {
-        setMounted(true);
-        return () => setMounted(false);
-    }, []);
+  useEffect(() => {
+    setMounted(true);
+    return () => setMounted(false);
+  }, []);
 
-    useEffect(() => {
-        if (isOpen) {
-            if (condominioToEdit) {
-                setValue('nome', condominioToEdit.nome);
-                setValue('endereco', condominioToEdit.endereco || '');
-            } else {
-                reset({ nome: '', endereco: '' });
-            }
-            setError(null);
-            document.body.style.overflow = 'hidden';
-        } else {
-            document.body.style.overflow = 'unset';
-        }
-    }, [isOpen, condominioToEdit, setValue, reset]);
+  useEffect(() => {
+    if (isOpen) {
+      if (condominioToEdit) {
+        setValue('nome', condominioToEdit.nome);
+        setValue('endereco', condominioToEdit.endereco || '');
+      } else {
+        reset({ nome: '', endereco: '' });
+      }
+      setError(null);
+      document.body.style.overflow = 'hidden';
+    } else {
+      document.body.style.overflow = 'unset';
+    }
 
-    const onSubmit = async (data: CreateCondominioDto) => {
-        setIsSubmitting(true);
-        setError(null);
+    return () => { document.body.style.overflow = 'unset'; };
+  }, [isOpen, condominioToEdit, setValue, reset]);
+
+  const onSubmit = async (data: CreateCondominioDto) => {
+    setIsSubmitting(true);
+    setError(null);
+    
+    try {
+      let result: Condominio;
+      
+      if (condominioToEdit) {
+        result = await condominioService.update(condominioToEdit.id, data);
+      } else {
+        result = await condominioService.create(data);
+      }
+      
+      onSuccess(result);
+      onClose();
+    } catch (err: unknown) {
+      console.error('Erro ao salvar condomínio:', err);
+      
+      if (err instanceof AxiosError && err.response?.data) {
+        const errorData = err.response.data as ApiErrorResponse;
         
-        try {
-            let result;
-            if (condominioToEdit) {
-                result = await condominioService.update(condominioToEdit.id, data);
-            } else {
-                result = await condominioService.create(data);
-            }
-            onSuccess(result);
-            onClose();
-        } catch (err: any) {
-            console.error('Erro ao salvar:', err);
-            
-            // Tratamento específico de erros do backend
-            const errorData = err.response?.data;
-            
-            if (errorData?.message) {
-                if (Array.isArray(errorData.message)) {
-                    setError(errorData.message.join(', '));
-                } else {
-                    setError(errorData.message);
-                }
-            } else if (errorData?.error) {
-                setError(errorData.error);
-            } else {
-                setError('Erro ao salvar. Verifique os dados e tente novamente.');
-            }
-        } finally {
-            setIsSubmitting(false);
+        if (Array.isArray(errorData.message)) {
+          setError(errorData.message.join(', '));
+        } else {
+          setError(errorData.message || 'Erro desconhecido ao processar requisição.');
         }
-    };
+      } else {
+        setError('Ocorreu um erro inesperado. Tente novamente.');
+      }
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
 
-    if (!mounted || !isOpen) return null;
+  if (!mounted || !isOpen) return null;
 
-    return createPortal(
-        <div className="fixed inset-0 z-[9999] flex items-center justify-center p-4">
-            <div 
-                className="absolute inset-0 bg-stone-900/40 backdrop-blur-sm transition-opacity duration-300" 
-                onClick={onClose} 
-            />
+  return createPortal(
+    <div className="fixed inset-0 z-[9999] flex items-center justify-center p-4">
+      <div 
+        className="absolute inset-0 bg-stone-900/40 backdrop-blur-sm transition-opacity duration-300" 
+        onClick={onClose} 
+      />
 
-            <div className="relative z-10 bg-white rounded-2xl shadow-2xl w-full max-w-lg overflow-hidden flex flex-col max-h-[90vh] animate-in zoom-in-95 duration-200">
+      <div className="relative z-10 bg-white rounded-2xl shadow-2xl w-full max-w-lg overflow-hidden flex flex-col max-h-[90vh] animate-in zoom-in-95 duration-200 border border-stone-100">
 
-                {/* Header */}
-                <div className="px-8 py-5 border-b border-stone-100 flex items-center justify-between bg-white">
-                    <div className="flex items-center gap-4">
-                        <div className="p-2.5 bg-stone-50 rounded-xl">
-                            <Building2 className="w-6 h-6 text-clay-600" strokeWidth={1.5} />
-                        </div>
-                        <div>
-                            <h2 className="text-lg font-semibold text-espresso-900">
-                                {condominioToEdit ? 'Editar Condomínio' : 'Novo Condomínio'}
-                            </h2>
-                            <p className="text-xs text-stone-500 font-light">Detalhes do empreendimento.</p>
-                        </div>
-                    </div>
-                    <button onClick={onClose} className="p-2 hover:bg-stone-50 rounded-full text-stone-400 hover:text-espresso-800 transition-colors">
-                        <X className="w-5 h-5" strokeWidth={1.5} />
-                    </button>
-                </div>
-
-                {/* Form */}
-                <form onSubmit={handleSubmit(onSubmit)} className="p-8 space-y-6 overflow-y-auto">
-
-                    <div className="space-y-1.5">
-                        <label className="text-xs font-bold text-stone-500 uppercase tracking-wider ml-1">Nome do Empreendimento</label>
-                        <input
-                            {...register('nome', { 
-                                required: 'O nome é obrigatório',
-                                minLength: { value: 3, message: 'O nome deve ter pelo menos 3 caracteres' },
-                                maxLength: { value: 100, message: 'O nome deve ter no máximo 100 caracteres' }
-                            })}
-                            type="text"
-                            placeholder="Ex: Residencial Solar das Águas"
-                            className="w-full px-4 py-3 bg-stone-50 border border-stone-200 rounded-xl text-espresso-900 placeholder-stone-400 focus:outline-none focus:border-clay-300 focus:ring-4 focus:ring-clay-100/50 transition-all"
-                        />
-                        {errors.nome && <span className="text-xs text-red-500 ml-1">{errors.nome.message}</span>}
-                    </div>
-
-                    <div className="space-y-1.5">
-                        <label className="text-xs font-bold text-stone-500 uppercase tracking-wider ml-1">Endereço Completo</label>
-                        <div className="relative group">
-                            <MapPin className="absolute left-4 top-3.5 w-5 h-5 text-stone-400 group-focus-within:text-clay-500 transition-colors" strokeWidth={1.5} />
-                            <textarea
-                                {...register('endereco', {
-                                    maxLength: { value: 255, message: 'O endereço deve ter no máximo 255 caracteres' }
-                                })}
-                                rows={3}
-                                placeholder="Rua, Número, Bairro, Cidade..."
-                                className="w-full pl-12 pr-4 py-3 bg-stone-50 border border-stone-200 rounded-xl text-espresso-900 placeholder-stone-400 focus:outline-none focus:border-clay-300 focus:ring-4 focus:ring-clay-100/50 transition-all resize-none"
-                            />
-                        </div>
-                        {errors.endereco && <span className="text-xs text-red-500 ml-1">{errors.endereco.message}</span>}
-                    </div>
-
-                    {error && (
-                        <div className="p-4 bg-red-50/50 text-red-600 text-sm rounded-xl border border-red-100 flex items-center gap-2">
-                            <span className="w-1.5 h-1.5 bg-red-500 rounded-full"/> {error}
-                        </div>
-                    )}
-
-                    <div className="pt-4 flex items-center justify-end gap-3 border-t border-stone-100">
-                        <button
-                            type="button"
-                            onClick={onClose}
-                            className="px-6 py-3 rounded-xl text-sm font-medium text-stone-500 hover:bg-stone-50 hover:text-espresso-800 transition-colors"
-                        >
-                            Cancelar
-                        </button>
-                        <button
-                            type="submit"
-                            disabled={isSubmitting}
-                            className="px-6 py-3 bg-espresso-800 hover:bg-espresso-900 text-white rounded-xl text-sm font-medium shadow-lg shadow-stone-200 hover:shadow-xl hover:-translate-y-0.5 transition-all flex items-center gap-2 disabled:opacity-70 disabled:cursor-not-allowed"
-                        >
-                            {isSubmitting ? <Loader2 className="w-4 h-4 animate-spin" /> : <Save className="w-4 h-4" />}
-                            {condominioToEdit ? 'Salvar Alterações' : 'Cadastrar'}
-                        </button>
-                    </div>
-                </form>
+        <div className="px-8 py-5 border-b border-stone-100 flex items-center justify-between bg-white">
+          <div className="flex items-center gap-4">
+            <div className="p-2.5 bg-stone-50 rounded-xl border border-stone-100">
+              <Building2 className="w-6 h-6 text-clay-600" strokeWidth={1.5} />
             </div>
-        </div>,
-        document.body
-    );
+            <div>
+              <h2 className="text-lg font-semibold text-espresso-900 tracking-tight">
+                {condominioToEdit ? 'Editar Condomínio' : 'Novo Condomínio'}
+              </h2>
+              <p className="text-xs text-stone-500 font-light">
+                {condominioToEdit ? 'Atualize os dados abaixo.' : 'Preencha os detalhes do empreendimento.'}
+              </p>
+            </div>
+          </div>
+          <button onClick={onClose} className="p-2 hover:bg-stone-50 rounded-full text-stone-400 hover:text-espresso-800 transition-colors">
+            <X className="w-5 h-5" strokeWidth={1.5} />
+          </button>
+        </div>
+
+        <form onSubmit={handleSubmit(onSubmit)} className="p-8 space-y-6 overflow-y-auto custom-scrollbar">
+
+          <div className="space-y-1.5">
+            <label className="text-xs font-bold text-stone-500 uppercase tracking-wider ml-1">Nome do Empreendimento</label>
+            <input
+              {...register('nome', { 
+                required: 'O nome é obrigatório',
+                minLength: { value: 3, message: 'O nome deve ter pelo menos 3 caracteres' },
+                maxLength: { value: 100, message: 'O nome deve ter no máximo 100 caracteres' }
+              })}
+              type="text"
+              placeholder="Ex: Residencial Solar das Águas"
+              className="w-full px-4 py-3 bg-stone-50 border border-stone-200 rounded-xl text-espresso-900 placeholder-stone-400 focus:outline-none focus:border-clay-300 focus:ring-4 focus:ring-clay-100/50 transition-all"
+            />
+            {errors.nome && <span className="text-xs text-red-500 ml-1 font-medium">{errors.nome.message}</span>}
+          </div>
+
+          <div className="space-y-1.5">
+            <label className="text-xs font-bold text-stone-500 uppercase tracking-wider ml-1">Endereço Completo</label>
+            <div className="relative group">
+              <MapPin className="absolute left-4 top-3.5 w-5 h-5 text-stone-400 group-focus-within:text-clay-500 transition-colors" strokeWidth={1.5} />
+              <textarea
+                {...register('endereco', {
+                  maxLength: { value: 255, message: 'O endereço deve ter no máximo 255 caracteres' }
+                })}
+                rows={3}
+                placeholder="Rua, Número, Bairro, Cidade..."
+                className="w-full pl-12 pr-4 py-3 bg-stone-50 border border-stone-200 rounded-xl text-espresso-900 placeholder-stone-400 focus:outline-none focus:border-clay-300 focus:ring-4 focus:ring-clay-100/50 transition-all resize-none"
+              />
+            </div>
+            {errors.endereco && <span className="text-xs text-red-500 ml-1 font-medium">{errors.endereco.message}</span>}
+          </div>
+
+          {error && (
+            <div className="p-4 bg-red-50/50 text-red-600 text-sm rounded-xl border border-red-100 flex items-start gap-2 animate-in fade-in slide-in-from-top-2">
+              <span className="w-1.5 h-1.5 bg-red-500 rounded-full mt-2 shrink-0"/> 
+              <span className="leading-relaxed">{error}</span>
+            </div>
+          )}
+
+          <div className="pt-4 flex items-center justify-end gap-3 border-t border-stone-100">
+            <button
+              type="button"
+              onClick={onClose}
+              disabled={isSubmitting}
+              className="px-6 py-3 rounded-xl text-sm font-medium text-stone-500 hover:bg-stone-50 hover:text-espresso-800 transition-colors disabled:opacity-50"
+            >
+              Cancelar
+            </button>
+            <button
+              type="submit"
+              disabled={isSubmitting}
+              className="px-6 py-3 bg-espresso-800 hover:bg-espresso-900 text-white rounded-xl text-sm font-medium shadow-lg shadow-stone-200 hover:shadow-xl hover:-translate-y-0.5 transition-all flex items-center gap-2 disabled:opacity-70 disabled:cursor-not-allowed disabled:transform-none"
+            >
+              {isSubmitting ? <Loader2 className="w-4 h-4 animate-spin" /> : <Save className="w-4 h-4" />}
+              {condominioToEdit ? 'Salvar Alterações' : 'Cadastrar'}
+            </button>
+          </div>
+        </form>
+      </div>
+    </div>,
+    document.body
+  );
 }

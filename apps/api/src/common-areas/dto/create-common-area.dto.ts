@@ -39,7 +39,6 @@ export class CreateCommonAreaDto {
     })
     @IsString()
     @IsOptional()
-    // Sugestão: @IsUrl({}, { message: 'URL da foto inválida.' }) se quiser validar formato de link
     photoUrl?: string;
 
     @ApiProperty({

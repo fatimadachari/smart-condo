@@ -3,7 +3,6 @@ import { ApiPropertyOptional } from '@nestjs/swagger';
 import { IsEnum, IsOptional } from 'class-validator';
 import { CreateBookingDto } from './create-booking.dto';
 
-// Se possível, mova este Enum para um arquivo compartilhado (ex: booking-status.enum.ts)
 export enum BookingStatus {
   PENDING = 'PENDING',
   CONFIRMED = 'CONFIRMED',

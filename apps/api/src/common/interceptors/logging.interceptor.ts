@@ -24,7 +24,6 @@ export class LoggingInterceptor implements NestInterceptor {
       `📥 ${method} ${url} - IP: ${ip} - User-Agent: ${userAgent}`,
     );
 
-    // FIX: Verificar se body existe e é um objeto antes de usar Object.keys
     if (body && typeof body === 'object' && Object.keys(body).length > 0) {
       this.logger.debug(`Body: ${JSON.stringify(body)}`);
     }

@@ -4,14 +4,13 @@ import { BookingsService } from './bookings.service';
 import { prisma } from '@smart-condo/database';
 import { BookingStatus } from './dto/update-booking.dto';
 
-// 1. Mock do Prisma (Database)
 jest.mock('@smart-condo/database', () => ({
   prisma: {
     booking: {
       create: jest.fn(),
       findMany: jest.fn(),
       findUnique: jest.fn(),
-      findFirst: jest.fn(), // Crucial para verificação de conflitos
+      findFirst: jest.fn(), 
       update: jest.fn(),
       delete: jest.fn(),
     },
@@ -34,26 +33,22 @@ describe('BookingsService', () => {
   });
 
   describe('create', () => {
-    // Dados padrão para os testes de criação
     const createDto = {
       commonAreaId: 'area-123',
       userId: 'user-123',
       date: new Date('2026-02-20T14:00:00Z'),
-      endDate: new Date('2026-02-20T16:00:00Z'), // 2 horas de duração
+      endDate: new Date('2026-02-20T16:00:00Z'), 
     };
 
     it('deve criar uma reserva com sucesso se não houver conflitos', async () => {
-      // Mock: Área comum existe e está ativa
       (prisma.commonArea.findUnique as jest.Mock).mockResolvedValue({ id: 'area-123', isActive: true });
       
-      // Mock: NENHUM conflito encontrado (retorna null)
       (prisma.booking.findFirst as jest.Mock).mockResolvedValue(null);
 
-      // Mock: Criação no banco
       const mockCreatedBooking = {
         id: 'booking-1',
         ...createDto,
-        status: 'PENDING', // O Banco retorna string
+        status: 'PENDING', 
         createdAt: new Date(),
       };
       (prisma.booking.create as jest.Mock).mockResolvedValue(mockCreatedBooking);
@@ -62,7 +57,7 @@ describe('BookingsService', () => {
 
       expect(result).toEqual(expect.objectContaining({
         id: 'booking-1',
-        status: BookingStatus.PENDING, // Verifica se o mapToDto converteu corretamente
+        status: BookingStatus.PENDING, 
       }));
       expect(prisma.booking.create).toHaveBeenCalled();
     });
@@ -70,7 +65,7 @@ describe('BookingsService', () => {
     it('deve lançar BadRequestException se a data final for anterior à inicial', async () => {
       const invalidDto = {
         ...createDto,
-        endDate: new Date('2026-02-20T13:00:00Z'), // 13h (antes das 14h)
+        endDate: new Date('2026-02-20T13:00:00Z'), 
       };
 
       await expect(service.create(invalidDto)).rejects.toThrow(BadRequestException);
@@ -85,7 +80,6 @@ describe('BookingsService', () => {
     it('deve lançar ConflictException se houver choque de horário', async () => {
       (prisma.commonArea.findUnique as jest.Mock).mockResolvedValue({ id: 'area-123', isActive: true });
       
-      // Mock: ENCONTROU uma reserva conflitante
       (prisma.booking.findFirst as jest.Mock).mockResolvedValue({ id: 'reserva-conflitante-id' });
 
       await expect(service.create(createDto)).rejects.toThrow(ConflictException);
@@ -96,7 +90,6 @@ describe('BookingsService', () => {
         commonAreaId: 'area-123',
         userId: 'user-123',
         date: new Date('2026-02-20T14:00:00Z'),
-        // endDate indefinido
       };
 
       (prisma.commonArea.findUnique as jest.Mock).mockResolvedValue({ id: 'area-123', isActive: true });
@@ -105,10 +98,8 @@ describe('BookingsService', () => {
 
       await service.create(dtoSemFim);
 
-      // Verifica com quais argumentos o prisma.create foi chamado
       expect(prisma.booking.create).toHaveBeenCalledWith(expect.objectContaining({
         data: expect.objectContaining({
-          // O endDate deve ter sido gerado automaticamente para 15:00 (+1h)
           endDate: new Date('2026-02-20T15:00:00Z'),
         }),
       }));
@@ -150,7 +141,6 @@ describe('BookingsService', () => {
       const existing = { id: '1', status: 'PENDING' };
       const updated = { id: '1', status: 'CONFIRMED' };
 
-      // O update chama o findOne primeiro para garantir existência
       (prisma.booking.findUnique as jest.Mock).mockResolvedValue(existing);
       (prisma.booking.update as jest.Mock).mockResolvedValue(updated);
 
