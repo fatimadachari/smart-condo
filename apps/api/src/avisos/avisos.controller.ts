@@ -1,43 +1,54 @@
-import { Controller, Get, Post, Body, Param, Delete, UseGuards, Request, Query, BadRequestException, Patch } from '@nestjs/common';
+import { Controller, Get, Post, Body, Param, Delete, UseGuards, Request, Query, BadRequestException, Patch, HttpStatus, HttpCode } from '@nestjs/common';
+import { ApiTags, ApiOperation, ApiResponse, ApiBearerAuth, ApiQuery, ApiParam } from '@nestjs/swagger';
+import { AuthGuard } from '@nestjs/passport';
 import { AvisosService } from './avisos.service';
 import { CreateAvisoDto } from './dto/create-aviso.dto';
-import { AuthGuard } from '@nestjs/passport';
+import { UpdateAvisoDto } from './dto/update-aviso.dto';
+import { AvisoResponseDto } from './dto/aviso-response.dto';
 
+@ApiTags('Avisos')
+@ApiBearerAuth('JWT-auth')
 @Controller('avisos')
 @UseGuards(AuthGuard('jwt'))
 export class AvisosController {
   constructor(private readonly avisosService: AvisosService) { }
 
   @Post()
-  create(@Body() createAvisoDto: CreateAvisoDto, @Request() req) {
-    // 1. Pega o ID do usuário (autor)
+  @ApiOperation({ summary: 'Criar novo aviso' })
+  @ApiResponse({ status: HttpStatus.CREATED, type: AvisoResponseDto })
+  @ApiResponse({ status: HttpStatus.BAD_REQUEST, description: 'Usuário sem condomínio vinculado.' })
+  create(@Body() createAvisoDto: CreateAvisoDto, @Request() req): Promise<AvisoResponseDto> {
     const userId = req.user.userId || req.user.id || req.user.sub;
-
-    // 2. Pega o ID do condomínio (assumindo que está no payload do JWT)
-    // Se o seu JWT não tiver isso, você terá que buscar o usuário no banco antes.
     const condominioId = req.user.condominioId;
 
     if (!condominioId) {
-      // Caso o usuário seja um super-admin ou algo errado com o token
       throw new BadRequestException('Usuário não vinculado a um condomínio');
     }
 
-    // 3. Passa os 3 argumentos para o service
     return this.avisosService.create(createAvisoDto, userId, condominioId);
   }
 
   @Get()
-  findAll(@Query('condominioId') condominioId?: string) {
+  @ApiOperation({ summary: 'Listar avisos' })
+  @ApiQuery({ name: 'condominioId', required: false, description: 'Filtrar avisos por condomínio específico' })
+  @ApiResponse({ status: HttpStatus.OK, type: [AvisoResponseDto] })
+  findAll(@Query('condominioId') condominioId?: string): Promise<AvisoResponseDto[]> {
     return this.avisosService.findAll(condominioId);
   }
 
   @Patch(':id')
-  update(@Param('id') id: string, @Body() updateAvisoDto: CreateAvisoDto) {
+  @ApiOperation({ summary: 'Atualizar aviso' })
+  @ApiParam({ name: 'id', example: 'uuid-do-aviso' })
+  @ApiResponse({ status: HttpStatus.OK, type: AvisoResponseDto })
+  update(@Param('id') id: string, @Body() updateAvisoDto: UpdateAvisoDto): Promise<AvisoResponseDto> {
     return this.avisosService.update(id, updateAvisoDto);
   }
   
   @Delete(':id')
-  remove(@Param('id') id: string) {
+  @HttpCode(HttpStatus.NO_CONTENT)
+  @ApiOperation({ summary: 'Excluir aviso' })
+  @ApiResponse({ status: HttpStatus.NO_CONTENT, description: 'Aviso excluído.' })
+  remove(@Param('id') id: string): Promise<void> {
     return this.avisosService.remove(id);
   }
 }
